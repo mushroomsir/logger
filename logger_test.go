@@ -8,14 +8,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestPanic(t *testing.T) {
+func TestStack(t *testing.T) {
 	assert := assert.New(t)
-	defer func() {
-		if err := recover(); err != nil {
-			assert.Equal(ErrInvalidLevel, err)
-		}
-	}()
-	defaultLogger.SetLevel(99)
+	assert.NotEmpty(Stack())
 }
 func TestDefaultLogger(t *testing.T) {
 
@@ -40,11 +35,15 @@ func TestDefaultLogger(t *testing.T) {
 	}
 }
 
-func TestLogger(t *testing.T) {
+func TestNoJSON(t *testing.T) {
 	assert := assert.New(t)
-
 	buf := new(bytes.Buffer)
-	logger := New(buf)
+	logger := New(buf, Options{
+		LogFormat:  "[%s] %s %s",
+		TimeFormat: "2006-01-02T15:04:05.999Z",
+		EnableJSON: false,
+		Level:      DebugLevel,
+	})
 
 	cases := []struct {
 		fun   func(v interface{})
@@ -63,12 +62,49 @@ func TestLogger(t *testing.T) {
 
 	for _, c := range cases {
 		c.fun("hello world\n")
+
 		assert.True(strings.HasSuffix(buf.String(), "Z] "+c.level+" hello world\n"))
 		buf.Reset()
 
 		c.funf("%v %s", "hello world", "1")
 		assert.True(strings.HasSuffix(buf.String(), "Z] "+c.level+" hello world 1\n"))
 		buf.Reset()
+
+		c.fun(Log{"msg": 1})
+		assert.True(strings.HasSuffix(buf.String(), c.level+" {\"msg\":1}\n"))
+		buf.Reset()
+
+		c.fun(1)
+		assert.True(strings.HasSuffix(buf.String(), "Z] "+c.level+" 1\n"))
+		buf.Reset()
+	}
+}
+func TestLogger(t *testing.T) {
+	assert := assert.New(t)
+
+	buf := new(bytes.Buffer)
+	logger := New(buf, Options{
+		LogFormat:  "[%s] %s %s",
+		TimeFormat: "2006-01-02T15:04:05.999Z",
+		EnableJSON: true,
+	})
+
+	cases := []struct {
+		fun   func(v interface{})
+		funf  func(format string, args ...interface{})
+		level string
+	}{
+		{logger.Debug, logger.Debugf, "DEBUG"},
+		{logger.Info, logger.Infof, "INFO"},
+		{logger.Notice, logger.Noticef, "NOTICE"},
+		{logger.Warning, logger.Warningf, "WARNING"},
+		{logger.Err, logger.Errf, "ERR"},
+		{logger.Crit, logger.Critf, "CRIT"},
+		{logger.Alert, logger.Alertf, "ALERT"},
+		{logger.Emerg, logger.Emergf, "EMERG"},
+	}
+
+	for _, c := range cases {
 
 		c.fun(Log{"msg": 1})
 		assert.True(strings.HasSuffix(buf.String(), c.level+" {\"msg\":1}\n"))
@@ -86,4 +122,5 @@ func TestLogger(t *testing.T) {
 		assert.True(strings.HasSuffix(buf.String(), c.level+" 1\n"))
 		buf.Reset()
 	}
+
 }

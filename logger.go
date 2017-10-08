@@ -2,9 +2,9 @@ package logger
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
+	"runtime"
 	"sync"
 	"time"
 )
@@ -18,8 +18,9 @@ type Log map[string]interface{}
 type Level uint8
 
 const (
+	defaultLevel Level = iota
 	// EmergLevel is 0, "Emergency", system is unusable
-	EmergLevel Level = iota
+	EmergLevel
 	// AlertLevel is 1, "Alert", action must be taken immediately
 	AlertLevel
 	// CritiLevel is 2, "Critical", critical conditions
@@ -37,57 +38,54 @@ const (
 )
 
 var (
-	levels          = []string{"EMERG", "ALERT", "CRIT", "ERR", "WARNING", "NOTICE", "INFO", "DEBUG"}
-	ErrInvalidLevel = errors.New("invalid logger level")
+	levels = []string{"EMERG", "ALERT", "CRIT", "ERR", "WARNING", "NOTICE", "INFO", "DEBUG"}
 )
 
+// Options ...
+type Options struct {
+	LogFormat  string
+	TimeFormat string
+	Level      Level
+	EnableJSON bool
+}
+
 // New create logger instance
-func New(w io.Writer) *Logger {
-	logger := &Logger{Out: w}
-	logger.SetLevel(DebugLevel)
-	logger.SetTimeFormat("2006-01-02T15:04:05.999Z")
-	logger.SetLogFormat("[%s] %s %s")
+func New(w io.Writer, options ...Options) *Logger {
+	logger := &Logger{
+		Out:        w,
+		level:      DebugLevel,
+		enableJSON: true,
+		tf:         "2006-01-02T15:04:05.999Z",
+		lf:         "[%s] %s %s",
+	}
+	if len(options) == 0 {
+		return logger
+	}
+	opt := options[0]
+	if opt.Level != defaultLevel {
+		logger.level = opt.Level
+	}
+	logger.enableJSON = opt.EnableJSON
+	if opt.TimeFormat != "" {
+		logger.tf = opt.TimeFormat
+	}
+	if opt.LogFormat != "" {
+		logger.lf = opt.LogFormat
+	}
 	return logger
 }
 
 // Logger ...
 type Logger struct {
-	Out    io.Writer
-	mu     sync.Mutex
-	tf, lf string
-	level  Level
+	Out        io.Writer
+	mu         sync.Mutex
+	tf, lf     string
+	level      Level
+	enableJSON bool
 }
 
 func (a *Logger) checkLogLevel(level Level) bool {
 	return level <= a.level
-}
-
-// SetLevel set the logger's log level
-// The default logger level is DebugLevel
-func (a *Logger) SetLevel(level Level) {
-	a.mu.Lock()
-	defer a.mu.Unlock()
-	if level > DebugLevel {
-		panic(ErrInvalidLevel)
-	}
-	a.level = level
-}
-
-// SetTimeFormat set the logger timestamp format
-// The default logger timestamp format is "2006-01-02T15:04:05.999Z"(JavaScript ISO date string)
-func (a *Logger) SetTimeFormat(timeFormat string) {
-	a.mu.Lock()
-	defer a.mu.Unlock()
-	a.tf = timeFormat
-}
-
-// SetLogFormat set the logger log format
-// it should accept 3 string values: timestamp, log level and log message
-// The default logger log format is "[%s] %s %s": "[time] logLevel message"
-func (a *Logger) SetLogFormat(logFormat string) {
-	a.mu.Lock()
-	defer a.mu.Unlock()
-	a.lf = logFormat
 }
 
 // Output ...
@@ -97,7 +95,7 @@ func (a *Logger) Output(t time.Time, level Level, s string) (err error) {
 	if l := len(s); l > 0 && s[l-1] == '\n' {
 		s = s[0 : l-1]
 	}
-	_, err = fmt.Fprintf(a.Out, a.lf, t.UTC().Format(a.tf), levels[level], s)
+	_, err = fmt.Fprintf(a.Out, a.lf, t.UTC().Format(a.tf), levels[level-1], s)
 	if err == nil {
 		a.Out.Write([]byte{'\n'})
 	}
@@ -107,56 +105,56 @@ func (a *Logger) Output(t time.Time, level Level, s string) (err error) {
 // Debug ...
 func (a *Logger) Debug(v interface{}) {
 	if a.checkLogLevel(DebugLevel) {
-		a.Output(time.Now(), DebugLevel, format(v))
+		a.Output(time.Now(), DebugLevel, a.format(v))
 	}
 }
 
 // Info ...
 func (a *Logger) Info(v interface{}) {
 	if a.checkLogLevel(InfoLevel) {
-		a.Output(time.Now(), InfoLevel, format(v))
+		a.Output(time.Now(), InfoLevel, a.format(v))
 	}
 }
 
 // Notice ...
 func (a *Logger) Notice(v interface{}) {
 	if a.checkLogLevel(NoticeLevel) {
-		a.Output(time.Now(), NoticeLevel, format(v))
+		a.Output(time.Now(), NoticeLevel, a.format(v))
 	}
 }
 
 // Warning ...
 func (a *Logger) Warning(v interface{}) {
 	if a.checkLogLevel(WarningLevel) {
-		a.Output(time.Now(), WarningLevel, format(v))
+		a.Output(time.Now(), WarningLevel, a.format(v))
 	}
 }
 
 // Err ...
 func (a *Logger) Err(v interface{}) {
 	if a.checkLogLevel(ErrLevel) {
-		a.Output(time.Now(), ErrLevel, format(v))
+		a.Output(time.Now(), ErrLevel, a.format(v))
 	}
 }
 
 // Crit ...
 func (a *Logger) Crit(v interface{}) {
 	if a.checkLogLevel(CritiLevel) {
-		a.Output(time.Now(), CritiLevel, format(v))
+		a.Output(time.Now(), CritiLevel, a.format(v))
 	}
 }
 
 // Alert ...
 func (a *Logger) Alert(v interface{}) {
 	if a.checkLogLevel(AlertLevel) {
-		a.Output(time.Now(), AlertLevel, format(v))
+		a.Output(time.Now(), AlertLevel, a.format(v))
 	}
 }
 
 // Emerg ...
 func (a *Logger) Emerg(v interface{}) {
 	if a.checkLogLevel(EmergLevel) {
-		a.Output(time.Now(), EmergLevel, format(v))
+		a.Output(time.Now(), EmergLevel, a.format(v))
 	}
 }
 
@@ -200,17 +198,17 @@ func (a *Logger) Emergf(format string, args ...interface{}) {
 	a.Emerg(fmt.Sprintf(format, args...))
 }
 
-func format(v interface{}) string {
+func (a *Logger) format(v interface{}) string {
 	var isMarshal bool
-	switch v.(type) {
-	case map[string]string:
+	if a.enableJSON {
 		isMarshal = true
-	case map[string]interface{}:
-		isMarshal = true
-	case Log:
-		isMarshal = true
-	case string:
-		return v.(string)
+	} else {
+		switch v.(type) {
+		case Log:
+			isMarshal = true
+		case string:
+			return v.(string)
+		}
 	}
 	if isMarshal {
 		res, err := json.Marshal(v)
@@ -218,5 +216,12 @@ func format(v interface{}) string {
 			return string(res)
 		}
 	}
-	return fmt.Sprintln(v)
+	return fmt.Sprint(v)
+}
+
+// Stack formats a stack trace of the calling goroutine
+func Stack() string {
+	buf := make([]byte, 4098)
+	n := runtime.Stack(buf, false)
+	return string(buf[:n])
 }
