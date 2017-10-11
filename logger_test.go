@@ -15,7 +15,7 @@ func TestStack(t *testing.T) {
 func TestDefaultLogger(t *testing.T) {
 
 	cases := []struct {
-		fun   func(v interface{})
+		fun   func(v ...interface{})
 		funf  func(format string, args ...interface{})
 		level string
 	}{
@@ -46,7 +46,7 @@ func TestNoJSON(t *testing.T) {
 	})
 
 	cases := []struct {
-		fun   func(v interface{})
+		fun   func(v ...interface{})
 		funf  func(format string, args ...interface{})
 		level string
 	}{
@@ -77,6 +77,18 @@ func TestNoJSON(t *testing.T) {
 		c.fun(1)
 		assert.True(strings.HasSuffix(buf.String(), "Z] "+c.level+" 1\n"))
 		buf.Reset()
+
+		c.fun("x")
+		assert.True(strings.HasSuffix(buf.String(), c.level+" x\n"))
+		buf.Reset()
+
+		c.fun("name", "vidar", "age", 18)
+		assert.True(strings.HasSuffix(buf.String(), c.level+" namevidarage18\n"))
+		buf.Reset()
+
+		c.fun(1, "vidar", "age", 18)
+		assert.True(strings.HasSuffix(buf.String(), c.level+" 1vidarage18\n"))
+		buf.Reset()
 	}
 }
 func TestLogger(t *testing.T) {
@@ -90,7 +102,7 @@ func TestLogger(t *testing.T) {
 	})
 
 	cases := []struct {
-		fun   func(v interface{})
+		fun   func(v ...interface{})
 		funf  func(format string, args ...interface{})
 		level string
 	}{
@@ -121,6 +133,17 @@ func TestLogger(t *testing.T) {
 		c.fun(1)
 		assert.True(strings.HasSuffix(buf.String(), c.level+" 1\n"))
 		buf.Reset()
-	}
 
+		c.fun("x")
+		assert.True(strings.HasSuffix(buf.String(), c.level+" x\n"))
+		buf.Reset()
+
+		c.fun("name", "vidar", "age", 18)
+		assert.True(strings.HasSuffix(buf.String(), c.level+" {\"age\":18,\"name\":\"vidar\"}\n"))
+		buf.Reset()
+
+		c.fun(1, "vidar", "age", 18)
+		assert.True(strings.HasSuffix(buf.String(), c.level+" {\"msg1\":1,\"msg2\":\"vidar\",\"msg3\":\"age\",\"msg4\":18}\n"))
+		buf.Reset()
+	}
 }

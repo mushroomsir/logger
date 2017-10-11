@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"runtime"
+	"strconv"
 	"sync"
 	"time"
 )
@@ -103,59 +104,87 @@ func (a *Logger) Output(t time.Time, level Level, s string) (err error) {
 }
 
 // Debug ...
-func (a *Logger) Debug(v interface{}) {
+func (a *Logger) Debug(v ...interface{}) {
 	if a.checkLogLevel(DebugLevel) {
-		a.Output(time.Now(), DebugLevel, a.format(v))
+		a.Output(time.Now(), DebugLevel, a.format(a.magic(v...)))
 	}
 }
 
 // Info ...
-func (a *Logger) Info(v interface{}) {
+func (a *Logger) Info(v ...interface{}) {
 	if a.checkLogLevel(InfoLevel) {
-		a.Output(time.Now(), InfoLevel, a.format(v))
+		a.Output(time.Now(), InfoLevel, a.format(a.magic(v...)))
 	}
 }
 
 // Notice ...
-func (a *Logger) Notice(v interface{}) {
+func (a *Logger) Notice(v ...interface{}) {
 	if a.checkLogLevel(NoticeLevel) {
-		a.Output(time.Now(), NoticeLevel, a.format(v))
+		a.Output(time.Now(), NoticeLevel, a.format(a.magic(v...)))
 	}
 }
 
 // Warning ...
-func (a *Logger) Warning(v interface{}) {
+func (a *Logger) Warning(v ...interface{}) {
 	if a.checkLogLevel(WarningLevel) {
-		a.Output(time.Now(), WarningLevel, a.format(v))
+		a.Output(time.Now(), WarningLevel, a.format(a.magic(v...)))
 	}
 }
 
 // Err ...
-func (a *Logger) Err(v interface{}) {
+func (a *Logger) Err(v ...interface{}) {
 	if a.checkLogLevel(ErrLevel) {
-		a.Output(time.Now(), ErrLevel, a.format(v))
+		a.Output(time.Now(), ErrLevel, a.format(a.magic(v...)))
 	}
 }
 
 // Crit ...
-func (a *Logger) Crit(v interface{}) {
+func (a *Logger) Crit(v ...interface{}) {
 	if a.checkLogLevel(CritiLevel) {
-		a.Output(time.Now(), CritiLevel, a.format(v))
+		a.Output(time.Now(), CritiLevel, a.format(a.magic(v...)))
 	}
 }
 
 // Alert ...
-func (a *Logger) Alert(v interface{}) {
+func (a *Logger) Alert(v ...interface{}) {
 	if a.checkLogLevel(AlertLevel) {
-		a.Output(time.Now(), AlertLevel, a.format(v))
+		a.Output(time.Now(), AlertLevel, a.format(a.magic(v...)))
 	}
 }
 
 // Emerg ...
-func (a *Logger) Emerg(v interface{}) {
+func (a *Logger) Emerg(v ...interface{}) {
 	if a.checkLogLevel(EmergLevel) {
-		a.Output(time.Now(), EmergLevel, a.format(v))
+		a.Output(time.Now(), EmergLevel, a.format(a.magic(v...)))
 	}
+}
+func (a *Logger) magic(v ...interface{}) interface{} {
+	if len(v) == 1 {
+		return v[0]
+	}
+	m := make(map[string]interface{})
+	if len(v)%2 == 0 && a.enableJSON {
+		for i, val := range v {
+			if i%2 == 0 {
+				switch val.(type) {
+				case string:
+					m[val.(string)] = v[i+1]
+				default:
+					goto join
+				}
+			}
+		}
+		return m
+	}
+join:
+	if a.enableJSON {
+		m = make(map[string]interface{})
+		for i, val := range v {
+			m["msg"+strconv.Itoa(i+1)] = val
+		}
+		return m
+	}
+	return fmt.Sprint(v...)
 }
 
 // Debugf ...
@@ -202,18 +231,19 @@ func (a *Logger) format(v interface{}) string {
 	var isMarshal bool
 	if a.enableJSON {
 		isMarshal = true
-	} else {
-		switch v.(type) {
-		case Log:
-			isMarshal = true
-		case string:
-			return v.(string)
-		}
+	}
+	switch v.(type) {
+	case Log:
+		isMarshal = true
+	case map[string]interface{}:
+		isMarshal = true
+	case string:
+		return v.(string)
 	}
 	if isMarshal {
 		res, err := json.Marshal(v)
 		if err == nil {
-			return string(res)
+			return string(res[:])
 		}
 	}
 	return fmt.Sprint(v)
