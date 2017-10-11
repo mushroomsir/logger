@@ -3,6 +3,7 @@ package logger
 import (
 	"bytes"
 	"strings"
+	"sync/atomic"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -11,6 +12,14 @@ import (
 func TestStack(t *testing.T) {
 	assert := assert.New(t)
 	assert.NotEmpty(Stack())
+	Warning("x", "x")
+	Warning()
+	assert.Equal(uint32(7), atomic.LoadUint32(&defaultLogger.ulevel))
+	defaultLogger.SetLevel(ErrLevel)
+	assert.Equal(uint32(3), atomic.LoadUint32(&defaultLogger.ulevel))
+	Warning("x") // Don't output
+	defaultLogger.SetLevel(DebugLevel)
+	assert.Equal(uint32(7), atomic.LoadUint32(&defaultLogger.ulevel))
 }
 func TestDefaultLogger(t *testing.T) {
 
@@ -42,7 +51,6 @@ func TestNoJSON(t *testing.T) {
 		LogFormat:  "[%s] %s %s",
 		TimeFormat: "2006-01-02T15:04:05.999Z",
 		EnableJSON: false,
-		Level:      DebugLevel,
 	})
 
 	cases := []struct {

@@ -7,6 +7,7 @@ import (
 	"runtime"
 	"strconv"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -16,12 +17,11 @@ type Log map[string]interface{}
 // Level represents logging level
 // https://tools.ietf.org/html/rfc5424
 // https://en.wikipedia.org/wiki/Syslog
-type Level uint8
+type Level uint32
 
 const (
-	defaultLevel Level = iota
 	// EmergLevel is 0, "Emergency", system is unusable
-	EmergLevel
+	EmergLevel Level = iota
 	// AlertLevel is 1, "Alert", action must be taken immediately
 	AlertLevel
 	// CritiLevel is 2, "Critical", critical conditions
@@ -46,7 +46,6 @@ var (
 type Options struct {
 	LogFormat  string
 	TimeFormat string
-	Level      Level
 	EnableJSON bool
 }
 
@@ -54,18 +53,15 @@ type Options struct {
 func New(w io.Writer, options ...Options) *Logger {
 	logger := &Logger{
 		Out:        w,
-		level:      DebugLevel,
 		enableJSON: true,
 		tf:         "2006-01-02T15:04:05.999Z",
 		lf:         "[%s] %s %s",
 	}
+	atomic.StoreUint32(&logger.ulevel, uint32(DebugLevel))
 	if len(options) == 0 {
 		return logger
 	}
 	opt := options[0]
-	if opt.Level != defaultLevel {
-		logger.level = opt.Level
-	}
 	logger.enableJSON = opt.EnableJSON
 	if opt.TimeFormat != "" {
 		logger.tf = opt.TimeFormat
@@ -81,12 +77,19 @@ type Logger struct {
 	Out        io.Writer
 	mu         sync.Mutex
 	tf, lf     string
-	level      Level
 	enableJSON bool
+	ulevel     uint32
 }
 
 func (a *Logger) checkLogLevel(level Level) bool {
-	return level <= a.level
+	val := atomic.LoadUint32(&a.ulevel)
+	return uint32(level) <= val
+}
+
+// SetLevel set the logger's log level
+// The default logger level is DebugLevel
+func (a *Logger) SetLevel(level Level) {
+	atomic.StoreUint32(&a.ulevel, uint32(level))
 }
 
 // Output ...
@@ -96,7 +99,7 @@ func (a *Logger) Output(t time.Time, level Level, s string) (err error) {
 	if l := len(s); l > 0 && s[l-1] == '\n' {
 		s = s[0 : l-1]
 	}
-	_, err = fmt.Fprintf(a.Out, a.lf, t.UTC().Format(a.tf), levels[level-1], s)
+	_, err = fmt.Fprintf(a.Out, a.lf, t.UTC().Format(a.tf), levels[level], s)
 	if err == nil {
 		a.Out.Write([]byte{'\n'})
 	}
@@ -159,6 +162,9 @@ func (a *Logger) Emerg(v ...interface{}) {
 	}
 }
 func (a *Logger) magic(v ...interface{}) interface{} {
+	if len(v) == 0 {
+		return ""
+	}
 	if len(v) == 1 {
 		return v[0]
 	}
