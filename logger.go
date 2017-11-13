@@ -89,7 +89,11 @@ func (a *Logger) checkLogLevel(level Level) bool {
 // SetLevel set the logger's log level
 // The default logger level is DebugLevel
 func (a *Logger) SetLevel(level Level) {
-	atomic.StoreUint32(&a.ulevel, uint32(level))
+	ulevel := uint32(7)
+	if level > 0 && level <= 7 {
+		ulevel = uint32(level)
+	}
+	atomic.StoreUint32(&a.ulevel, ulevel)
 }
 
 // Output ...

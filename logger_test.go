@@ -18,7 +18,7 @@ func TestStack(t *testing.T) {
 	defaultLogger.SetLevel(ErrLevel)
 	assert.Equal(uint32(3), atomic.LoadUint32(&defaultLogger.ulevel))
 	Warning("x") // Don't output
-	defaultLogger.SetLevel(DebugLevel)
+	defaultLogger.SetLevel(Level(100))
 	assert.Equal(uint32(7), atomic.LoadUint32(&defaultLogger.ulevel))
 }
 func TestDefaultLogger(t *testing.T) {
