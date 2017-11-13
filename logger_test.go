@@ -155,3 +155,19 @@ func TestLogger(t *testing.T) {
 		buf.Reset()
 	}
 }
+
+func TestFileLine(t *testing.T) {
+	assert := assert.New(t)
+
+	buf := new(bytes.Buffer)
+	logger := New(buf, Options{
+		EnableJSON:     true,
+		EnableFileLine: true,
+	})
+
+	logger.Warning("test", "test")
+	assert.Contains(buf.String(), "src/github.com/mushroomsir/logger/logger_test.go:168")
+	buf.Reset()
+	assert.Contains(GetCaller(1), "src/github.com/mushroomsir/logger/logger_test.go:171")
+	assert.Empty(GetCaller(100))
+}

@@ -44,9 +44,10 @@ var (
 
 // Options ...
 type Options struct {
-	LogFormat  string
-	TimeFormat string
-	EnableJSON bool
+	LogFormat      string
+	TimeFormat     string
+	EnableJSON     bool
+	EnableFileLine bool
 }
 
 // New create logger instance
@@ -69,6 +70,7 @@ func New(w io.Writer, options ...Options) *Logger {
 	if opt.LogFormat != "" {
 		logger.lf = opt.LogFormat
 	}
+	logger.opt = opt
 	return logger
 }
 
@@ -79,6 +81,7 @@ type Logger struct {
 	tf, lf     string
 	enableJSON bool
 	ulevel     uint32
+	opt        Options
 }
 
 func (a *Logger) checkLogLevel(level Level) bool {
@@ -184,6 +187,9 @@ func (a *Logger) magic(v ...interface{}) interface{} {
 				}
 			}
 		}
+		if a.opt.EnableFileLine {
+			m["FileLine"] = GetCaller(3)
+		}
 		return m
 	}
 join:
@@ -257,6 +263,15 @@ func (a *Logger) format(v interface{}) string {
 		}
 	}
 	return fmt.Sprint(v)
+}
+
+// GetCaller ...
+func GetCaller(layer int) string {
+	_, file, line, ok := runtime.Caller(layer)
+	if ok {
+		return fmt.Sprintf("%s:%d", file, line)
+	}
+	return ""
 }
 
 // Stack formats a stack trace of the calling goroutine

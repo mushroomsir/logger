@@ -16,7 +16,8 @@ func main() {
 	//output: [2017-09-29T05:27:10.639Z] WARNING {"code":500,"msg":"content"}
 
 	logger := logger.New(os.Stderr, logger.Options{
-		EnableJSON: true,
+		EnableJSON:     true,
+		EnableFileLine: true,
 	})
 	logger.Notice("msg", "content")
 	//output: [2017-10-11T02:48:28.598Z] NOTICE {"msg":"content"}
