@@ -2,6 +2,7 @@ package logger
 
 import (
 	"bytes"
+	"errors"
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -166,8 +167,12 @@ func TestFileLine(t *testing.T) {
 	})
 
 	logger.Warning("test", "test")
-	assert.Contains(buf.String(), "src/github.com/mushroomsir/logger/logger_test.go:168")
+	assert.Contains(buf.String(), "src/github.com/mushroomsir/logger/logger_test.go:169")
 	buf.Reset()
-	assert.Contains(GetCaller(1), "src/github.com/mushroomsir/logger/logger_test.go:171")
+	assert.Contains(GetCaller(1), "src/github.com/mushroomsir/logger/logger_test.go:172")
 	assert.Empty(GetCaller(100))
+
+	buf.Reset()
+	logger.Warning("Error", errors.New("xx"))
+	assert.Contains(buf.String(), `"Error":"xx"`)
 }

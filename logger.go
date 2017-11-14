@@ -181,7 +181,13 @@ func (a *Logger) magic(v ...interface{}) interface{} {
 			if i%2 == 0 {
 				switch val.(type) {
 				case string:
-					m[val.(string)] = v[i+1]
+					rVal := v[i+1]
+					switch rVal.(type) {
+					case error:
+						m[val.(string)] = rVal.(error).Error()
+					default:
+						m[val.(string)] = rVal
+					}
 				default:
 					goto join
 				}
