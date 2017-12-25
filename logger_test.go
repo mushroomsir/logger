@@ -6,6 +6,7 @@ import (
 	"strings"
 	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -154,6 +155,14 @@ func TestLogger(t *testing.T) {
 		c.fun(1, "vidar", "age", 18)
 		assert.True(strings.HasSuffix(buf.String(), c.level+" {\"msg1\":1,\"msg2\":\"vidar\",\"msg3\":\"age\",\"msg4\":18}\n"))
 		buf.Reset()
+
+		c.fun("name", "vidar", "time", 200*time.Millisecond)
+		assert.True(strings.HasSuffix(buf.String(), c.level+" {\"name\":\"vidar\",\"time\":200000000}\n"))
+		buf.Reset()
+
+		c.fun("error", errors.New("test"))
+		assert.True(strings.HasSuffix(buf.String(), c.level+" {\"error\":\"test\"}\n"))
+		buf.Reset()
 	}
 }
 
@@ -167,9 +176,9 @@ func TestFileLine(t *testing.T) {
 	})
 
 	logger.Warning("test", "test")
-	assert.Contains(buf.String(), "src/github.com/mushroomsir/logger/logger_test.go:169")
+	assert.Contains(buf.String(), "src/github.com/mushroomsir/logger/logger_test.go:178")
 	buf.Reset()
-	assert.Contains(GetCaller(1), "src/github.com/mushroomsir/logger/logger_test.go:172")
+	assert.Contains(GetCaller(1), "src/github.com/mushroomsir/logger/logger_test.go:181")
 	assert.Empty(GetCaller(100))
 
 	buf.Reset()
