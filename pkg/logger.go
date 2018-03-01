@@ -71,6 +71,9 @@ func New(w io.Writer, options ...Options) *Logger {
 	if opt.LogFormat != "" {
 		logger.lf = opt.LogFormat
 	}
+	if opt.Skip == 0 {
+		opt.Skip = 4
+	}
 	logger.opt = opt
 	return logger
 }
@@ -195,9 +198,6 @@ func (a *Logger) magic(v ...interface{}) interface{} {
 			}
 		}
 		if a.opt.EnableFileLine {
-			if a.opt.Skip == 0 {
-				a.opt.Skip = 4
-			}
 			m["FileLine"] = GetCaller(a.opt.Skip)
 		}
 		return m
