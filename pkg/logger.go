@@ -48,6 +48,7 @@ type Options struct {
 	TimeFormat     string
 	EnableJSON     bool
 	EnableFileLine bool
+	Skip           int
 }
 
 // New create logger instance
@@ -194,7 +195,10 @@ func (a *Logger) magic(v ...interface{}) interface{} {
 			}
 		}
 		if a.opt.EnableFileLine {
-			m["FileLine"] = GetCaller(3)
+			if a.opt.Skip == 0 {
+				a.opt.Skip = 4
+			}
+			m["FileLine"] = GetCaller(a.opt.Skip)
 		}
 		return m
 	}
