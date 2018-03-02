@@ -11,6 +11,15 @@ var defaultLogger = pkg.New(os.Stderr, pkg.Options{
 	EnableFileLine: true,
 })
 
+func checkSugar(v ...interface{}) bool {
+	if len(v) >= 2 && len(v)%2 == 0 && v[1] == nil {
+		if val, _ := v[0].(string); val == "Error" {
+			return false
+		}
+	}
+	return true
+}
+
 // SetLevel ...
 func SetLevel(level pkg.Level) {
 	defaultLogger.SetLevel(level)
@@ -18,47 +27,59 @@ func SetLevel(level pkg.Level) {
 
 // Debug ...
 func Debug(v ...interface{}) {
-	defaultLogger.Debug(v...)
+	if checkSugar(v...) {
+		defaultLogger.Debug(v...)
+	}
 
 }
 
 // Info ...
 func Info(v ...interface{}) {
-	defaultLogger.Info(v...)
-
+	if checkSugar(v...) {
+		defaultLogger.Info(v...)
+	}
 }
 
 // Notice ...
 func Notice(v ...interface{}) {
-	defaultLogger.Notice(v...)
-
+	if checkSugar(v...) {
+		defaultLogger.Notice(v...)
+	}
 }
 
 // Warning ...
 func Warning(v ...interface{}) {
-	defaultLogger.Warning(v...)
-
+	if checkSugar(v...) {
+		defaultLogger.Warning(v...)
+	}
 }
 
 // Err ...
 func Err(v ...interface{}) {
-	defaultLogger.Err(v...)
-
+	if checkSugar(v...) {
+		defaultLogger.Err(v...)
+	}
 }
 
 // Crit ...
 func Crit(v ...interface{}) {
-	defaultLogger.Crit(v...)
+	if checkSugar(v...) {
+		defaultLogger.Crit(v...)
+	}
 }
 
 // Alert ...
 func Alert(v ...interface{}) {
-	defaultLogger.Alert(v...)
+	if checkSugar(v...) {
+		defaultLogger.Alert(v...)
+	}
 }
 
 // Emerg ...
 func Emerg(v ...interface{}) {
-	defaultLogger.Emerg(v...)
+	if checkSugar(v...) {
+		defaultLogger.Emerg(v...)
+	}
 }
 
 // Debugf ...
