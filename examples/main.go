@@ -1,14 +1,29 @@
 package main
 
 import (
+	"errors"
 	"os"
 
 	"github.com/mushroomsir/logger"
+	"github.com/mushroomsir/logger/alog"
 )
 
 func main() {
+	// Simple model
+	alog.Info("hello world")
+	alog.Info("hello world", " mushroom")
+	alog.Infof("hello world %v", "format")
+
+	alog.Info("key", "val")
+	alog.Info("Error", nil)
+	alog.Info("Error", errors.New("EOF"))
+
+	alog.Debug()
+	alog.Info()
+	alog.Warning()
 	// sugar
 	logger.Debug("xxx")
+
 	//output: [2017-09-29T03:45:11.142Z] DEBUG xxx
 	logger.Infof("%v", 1)
 	//output: [2017-09-29T03:47:05.436Z] INFO 1

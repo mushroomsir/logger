@@ -7,35 +7,75 @@
 ## Installation
 
 ```sh
-go get github.com/mushroomsir/logger
+go get -u github.com/mushroomsir/logger
 ```
 
+## Feature
+
+- Easy to use
+- Display log ```FileLine```
+- Output ```JSON``` format 
+- Support ```KV```  syntactic sugar
+- Output ```Err``` automatically if ``` err!=nil ```
+- Standard log level [Syslog](https://en.wikipedia.org/wiki/Syslog)
+- Flexible for custom
+- Control output by level
+
 ## Usage
+
+#### Easy to use
+
 ```go
-package main
+alog.Info("hello world")
+alog.Infof("hello world %v", "format")
+// Outout:
+[2018-04-12T14:37:55.272Z] INFO hello world
+[2018-04-12T14:37:55.272Z] INFO hello world format
+```
 
-import "github.com/mushroomsir/logger"
+####  ```KV``` sugar / FileLine / JSON
 
-func main() {
-	// sugar
-	logger.Debug("xxx")
-	//output: [2017-09-29T03:45:11.142Z] DEBUG xxx
-	logger.Infof("%v", 1)
-	//output: [2017-09-29T03:47:05.436Z] INFO 1
-	logger.Warning("msg", "content", "code", 500)
-	//output: [2017-09-29T05:27:10.639Z] WARNING {"code":500,"msg":"content"}
+```go
+alog.Info("key", "val")
+// Output:
+[2018-04-12T14:46:58.088Z] INFO {"FileLine":"D:/go/src/github.com/mushroomsir/logger/examples/main.go:15","Key":"val"}
+```
 
-	logger := logger.New(os.Stderr, logger.Options{
-		EnableJSON: true,
-	})
-	logger.Notice("msg", "content")
-	//output: [2017-10-11T02:48:28.598Z] NOTICE {"msg":"content"}
-	logger.Err("msg", "content", "code", 500)
-	//output: [2017-09-29T05:27:10.639Z] ERR {"code":500,"msg":"content"}
-}
+#### Output ```Err``` automatically if ``` err!=nil ```
 
+```go
+alog.Info("Error", nil)
+// Output:
+Does not output anything if ```Err```==nil
 
+alog.Info("Error", errors.New("EOF"))
+[2018-04-12T14:51:41.19Z] INFO {"Error":"EOF","FileLine":"D:/go/src/github.com/mushroomsir/logger/examples/main.go:18"}
+```
 
+#### Standard log level [Syslog](https://en.wikipedia.org/wiki/Syslog)
+
+```go
+alog.Debug()
+alog.Info()
+alog.Warning()
+...
+```
+
+#### Flexible for custom
+
+```go
+var blog = pkg.New(os.Stderr, pkg.Options{
+	EnableJSON:     true,
+	EnableFileLine: true,
+    TimeFormat: "2006-01-02T15:04:05.999Z",
+    LogFormat: "[%s] %s %s",
+})
+```
+
+#### Control output by level
+
+```go
+alog.SetLevel(pkg.InfoLevel)
 ```
 
 ## Licenses
