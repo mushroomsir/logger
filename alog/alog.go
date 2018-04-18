@@ -54,6 +54,11 @@ func Warning(v ...interface{}) {
 	}
 }
 
+// Check ...
+func Check(err interface{}, v ...interface{}) bool {
+	return defaultLogger.Check(err, v...)
+}
+
 // Err ...
 func Err(v ...interface{}) {
 	if checkSugar(v...) {

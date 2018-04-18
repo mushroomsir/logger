@@ -145,6 +145,19 @@ func (a *Logger) Warning(v ...interface{}) {
 	}
 }
 
+// Check ...
+func (a *Logger) Check(err interface{}, v ...interface{}) bool {
+	if err != nil {
+		l := []interface{}{"Error", err}
+		for _, p := range v {
+			l = append(l, p)
+		}
+		a.Err(l...)
+		return true
+	}
+	return false
+}
+
 // Err ...
 func (a *Logger) Err(v ...interface{}) {
 	if a.checkLogLevel(ErrLevel) {
