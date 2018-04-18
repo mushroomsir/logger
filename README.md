@@ -16,6 +16,7 @@ go get -u github.com/mushroomsir/logger
 - Display log ```FileLine```
 - Output ```JSON``` format 
 - Support ```KV```  syntactic sugar
+- Improve efficiency
 - Output ```Err``` automatically if ``` err!=nil ```
 - Standard log level [Syslog](https://en.wikipedia.org/wiki/Syslog)
 - Flexible for custom
@@ -40,13 +41,30 @@ alog.Info("key", "val")
 // Output:
 [2018-04-12T14:46:58.088Z] INFO {"FileLine":"D:/go/src/github.com/mushroomsir/logger/examples/main.go:15","Key":"val"}
 ```
-
+#### Improve efficiency
+##### Return ```true``` value and output ```Err``` log if ``` err!=nil ```
+```go
+err := errors.New("x")
+if alog.Check(err) {
+    return err
+}
+// Output:
+[2018-04-18T00:34:19.946Z] ERR {"Error":"x","FileLine":"D:/go/src/github.com/mushroomsir/logger/alog/alog.go:59"}
+```
+##### Does not output anything if Err==nil and continue code execution
+```go
+var err error
+if alog.Check(err) {
+    return err
+}
+// continue code execution
+```
 #### Output ```Err``` automatically if ``` err!=nil ```
 
 ```go
 alog.Info("Error", nil)
 // Output:
-Does not output anything if ```Err```==nil
+Does not output anything if Err==nil
 
 alog.Info("Error", errors.New("EOF"))
 [2018-04-12T14:51:41.19Z] INFO {"Error":"EOF","FileLine":"D:/go/src/github.com/mushroomsir/logger/examples/main.go:18"}
