@@ -49,7 +49,7 @@ if alog.Check(err) {
     return err
 }
 // Output:
-[2018-04-18T00:34:19.946Z] ERR {"Error":"x","FileLine":"D:/go/src/github.com/mushroomsir/logger/alog/alog.go:59"}
+[2018-04-18T00:34:19.946Z] ERR {"Error":"x","FileLine":"D:/go/src/github.com/mushroomsir/logger/examples/main.go:13"}
 ```
 ##### Does not output anything if Err==nil and continue code execution
 ```go
