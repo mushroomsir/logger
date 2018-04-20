@@ -56,7 +56,15 @@ func Warning(v ...interface{}) {
 
 // Check ...
 func Check(err interface{}, v ...interface{}) bool {
-	return defaultLogger.Check(err, v...)
+	if err != nil {
+		l := []interface{}{"Error", err}
+		for _, p := range v {
+			l = append(l, p)
+		}
+		defaultLogger.Err(l...)
+		return true
+	}
+	return false
 }
 
 // Err ...

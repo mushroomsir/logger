@@ -9,6 +9,8 @@ import (
 )
 
 func main() {
+	alog.Check(nil)
+	alog.Check(errors.New("error"))
 	// Simple model
 	alog.Info("hello world")
 	alog.Info("hello world", " mushroom")
