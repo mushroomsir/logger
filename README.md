@@ -39,7 +39,7 @@ alog.Infof("hello world %v", "format")
 ```go
 alog.Info("key", "val")
 // Output:
-[2018-04-12T14:46:58.088Z] INFO {"FileLine":"D:/go/src/github.com/mushroomsir/logger/examples/main.go:15","Key":"val"}
+[2018-04-12T14:46:58.088Z] INFO {"FileLine":"main.go:15","Key":"val"}
 ```
 #### Improve efficiency
 ##### Return ```true``` value and output ```Err``` log if ``` err!=nil ```
@@ -49,7 +49,7 @@ if alog.Check(err) {
     return err
 }
 // Output:
-[2018-04-18T00:34:19.946Z] ERR {"Error":"x","FileLine":"D:/go/src/github.com/mushroomsir/logger/examples/main.go:13"}
+[2018-04-18T00:34:19.946Z] ERR {"Error":"x","FileLine":"main.go:13"}
 ```
 ##### Does not output anything if Err==nil and continue code execution
 ```go
@@ -67,7 +67,7 @@ alog.Info("Error", nil)
 Does not output anything if Err==nil
 
 alog.Info("Error", errors.New("EOF"))
-[2018-04-12T14:51:41.19Z] INFO {"Error":"EOF","FileLine":"D:/go/src/github.com/mushroomsir/logger/examples/main.go:18"}
+[2018-04-12T14:51:41.19Z] INFO {"Error":"EOF","FileLine":"main.go:18"}
 ```
 
 #### Standard log level [Syslog](https://en.wikipedia.org/wiki/Syslog)
