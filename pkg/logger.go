@@ -4,8 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"os"
+	"path/filepath"
 	"runtime"
 	"strconv"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -288,13 +291,25 @@ func (a *Logger) format(v interface{}) string {
 	return fmt.Sprint(v)
 }
 
+var workingDir = "/"
+
+func init() {
+	wd, err := os.Getwd()
+	println(wd)
+	if err == nil {
+		workingDir = filepath.ToSlash(wd) + "/"
+	}
+}
+
 // GetCaller ...
 func GetCaller(layer int) string {
 	_, file, line, ok := runtime.Caller(layer)
-	if ok {
-		return fmt.Sprintf("%s:%d", file, line)
+	if !ok {
+		file = "can not find source file"
+		line = 0
 	}
-	return ""
+	file = strings.TrimPrefix(file, workingDir)
+	return fmt.Sprintf("%s:%d", file, line)
 }
 
 // Stack formats a stack trace of the calling goroutine

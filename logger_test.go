@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/mushroomsir/logger/pkg"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -176,10 +177,10 @@ func TestFileLine(t *testing.T) {
 	})
 
 	logger.Warning("test", "test")
-	assert.Contains(buf.String(), "src/github.com/mushroomsir/logger/logger_test.go:178")
+	assert.Contains(buf.String(), "logger_test.go:179")
 	buf.Reset()
-	assert.Contains(GetCaller(1), "src/github.com/mushroomsir/logger/logger_test.go:181")
-	assert.Empty(GetCaller(100))
+	assert.Contains(pkg.GetCaller(1), "logger_test.go:182")
+	assert.Equal("can not find source file:0", pkg.GetCaller(100))
 
 	buf.Reset()
 	logger.Warning("Error", errors.New("xx"))

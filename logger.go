@@ -9,6 +9,8 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/mushroomsir/logger/pkg"
 )
 
 // Log ...
@@ -194,7 +196,7 @@ func (a *Logger) magic(v ...interface{}) interface{} {
 			}
 		}
 		if a.opt.EnableFileLine {
-			m["FileLine"] = GetCaller(3)
+			m["FileLine"] = pkg.GetCaller(3)
 		}
 		return m
 	}
@@ -269,15 +271,6 @@ func (a *Logger) format(v interface{}) string {
 		}
 	}
 	return fmt.Sprint(v)
-}
-
-// GetCaller ...
-func GetCaller(layer int) string {
-	_, file, line, ok := runtime.Caller(layer)
-	if ok {
-		return fmt.Sprintf("%s:%d", file, line)
-	}
-	return ""
 }
 
 // Stack formats a stack trace of the calling goroutine
