@@ -25,6 +25,11 @@ func SetLevel(level pkg.Level) {
 	defaultLogger.SetLevel(level)
 }
 
+// SetLogLevel ...
+func SetLogLevel(level uint8) {
+	defaultLogger.SetLevel(pkg.Level(level))
+}
+
 // Debug ...
 func Debug(v ...interface{}) {
 	if checkSugar(v...) {
