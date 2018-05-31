@@ -291,13 +291,13 @@ func (a *Logger) format(v interface{}) string {
 	return fmt.Sprint(v)
 }
 
-var workingDir = "/"
+var workingDir []string
 
 func init() {
 	wd, err := os.Getwd()
-	println(wd)
 	if err == nil {
-		workingDir = filepath.ToSlash(wd) + "/"
+		dir := filepath.ToSlash(wd) + "/"
+		workingDir = strings.Split(dir, "/")
 	}
 }
 
@@ -308,7 +308,9 @@ func GetCaller(layer int) string {
 		file = "can not find source file"
 		line = 0
 	}
-	file = strings.TrimPrefix(file, workingDir)
+	for _, d := range workingDir {
+		file = strings.TrimPrefix(file, d+"/")
+	}
 	return fmt.Sprintf("%s:%d", file, line)
 }
 
