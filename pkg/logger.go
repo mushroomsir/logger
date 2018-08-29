@@ -296,7 +296,7 @@ var workingDir []string
 func init() {
 	wd, err := os.Getwd()
 	if err == nil {
-		dir := filepath.ToSlash(wd) + "/"
+		dir := filepath.ToSlash(wd)
 		workingDir = strings.Split(dir, "/")
 	}
 }
@@ -309,7 +309,12 @@ func GetCaller(layer int) string {
 		line = 0
 	}
 	for _, d := range workingDir {
-		file = strings.TrimPrefix(file, d+"/")
+		if d == "" {
+			continue
+		}
+		file = strings.TrimPrefix(file, "/")
+		file = strings.TrimPrefix(file, d)
+		file = strings.TrimPrefix(file, "/")
 	}
 	return fmt.Sprintf("%s:%d", file, line)
 }
