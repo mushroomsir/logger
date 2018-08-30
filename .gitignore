@@ -2,7 +2,6 @@
 debug
 debug.test
 vendor
-make.ps1
 testdata/download
 testdata/fileserver
 make.bat

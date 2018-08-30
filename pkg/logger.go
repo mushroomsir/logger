@@ -149,7 +149,7 @@ func (a *Logger) Warning(v ...interface{}) {
 }
 
 // Check ...
-func (a *Logger) Check(err interface{}, v ...interface{}) bool {
+func (a *Logger) Check(err error, v ...interface{}) bool {
 	if err != nil {
 		l := []interface{}{"Error", err}
 		for _, p := range v {

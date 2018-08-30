@@ -9,6 +9,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+type myError struct{}
+
+func (e *myError) Error() string {
+	return ""
+}
 func TestCheck(t *testing.T) {
 	require := require.New(t)
 	buf := new(bytes.Buffer)
@@ -20,6 +25,8 @@ func TestCheck(t *testing.T) {
 
 	require.Equal(false, logger.Check(nil))
 	require.Equal(true, logger.Check(errors.New("error")))
+	require.Equal(true, logger.Check(&myError{}))
+
 	log.Println(buf.String())
 	require.Contains(buf.String(), `ERR {"Error":"error","FileLine":"`)
 	buf.Reset()
