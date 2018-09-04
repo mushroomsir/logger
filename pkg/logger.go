@@ -274,11 +274,13 @@ func (a *Logger) format(v interface{}) string {
 	if a.enableJSON {
 		isMarshal = true
 	}
-	switch v.(type) {
+	switch val := v.(type) {
 	case Log:
 		isMarshal = true
+		val["FileLine"] = GetCaller(a.opt.Skip)
 	case map[string]interface{}:
 		isMarshal = true
+		val["FileLine"] = GetCaller(a.opt.Skip)
 	case string:
 		return v.(string)
 	}
