@@ -192,9 +192,6 @@ func (a *Logger) magic(v ...interface{}) interface{} {
 	if len(v) == 0 {
 		return ""
 	}
-	if len(v) == 1 {
-		return v[0]
-	}
 	m := make(map[string]interface{})
 	if len(v)%2 == 0 && a.enableJSON {
 		for i, val := range v {

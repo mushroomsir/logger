@@ -18,11 +18,9 @@ func main() {
 
 	alog.Info("key", "val")
 	alog.Info("Error", nil)
+	alog.Info(1, "x")
 	alog.Info("Error", errors.New("EOF"))
 
-	alog.Debug()
-	alog.Info()
-	alog.Warning()
 	// sugar
 	logger.Debug("xxx")
 

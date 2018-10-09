@@ -61,7 +61,7 @@ func Warning(v ...interface{}) {
 
 // Check ...
 func Check(err interface{}, v ...interface{}) bool {
-	if err != nil {
+	if !pkg.IsNil(err) {
 		l := []interface{}{"Error", err}
 		for _, p := range v {
 			l = append(l, p)
