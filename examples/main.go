@@ -4,13 +4,14 @@ import (
 	"errors"
 	"os"
 
-	"github.com/mushroomsir/logger"
 	"github.com/mushroomsir/logger/alog"
+	"github.com/mushroomsir/logger/pkg"
 )
 
 func main() {
-	alog.Check(nil)
-	alog.Check(errors.New("error"))
+	alog.Info()
+	alog.Info(nil)
+	alog.NotNil(errors.New("error"))
 	// Simple model
 	alog.Info("hello world")
 	alog.Info("hello world", " mushroom")
@@ -21,16 +22,7 @@ func main() {
 	alog.Info(1, "x")
 	alog.Info("Error", errors.New("EOF"))
 
-	// sugar
-	logger.Debug("xxx")
-
-	//output: [2017-09-29T03:45:11.142Z] DEBUG xxx
-	logger.Infof("%v", 1)
-	//output: [2017-09-29T03:47:05.436Z] INFO 1
-	logger.Warning("msg", "content", "code", 500)
-	//output: [2017-09-29T05:27:10.639Z] WARNING {"code":500,"msg":"content"}
-
-	logger := logger.New(os.Stderr, logger.Options{
+	logger := pkg.New(os.Stderr, pkg.Options{
 		EnableJSON:     true,
 		EnableFileLine: true,
 	})

@@ -30,8 +30,8 @@ go get -u github.com/mushroomsir/logger
 alog.Info("hello world")
 alog.Infof("hello world %v", "format")
 // Outout:
-[2018-04-12T14:37:55.272Z] INFO hello world
-[2018-04-12T14:37:55.272Z] INFO hello world format
+[2018-10-13T03:05:28.476Z] INFO {"file":"examples/main.go:16","message1":"hello world"}
+[2018-10-13T03:05:28.477Z] INFO {"file":"examples/main.go:18","message":"hello world format"}
 ```
 
 ####  ```KV``` sugar / FileLine / JSON
@@ -39,22 +39,22 @@ alog.Infof("hello world %v", "format")
 ```go
 alog.Info("key", "val")
 // Output:
-[2018-04-12T14:46:58.088Z] INFO {"FileLine":"main.go:15","Key":"val"}
+[2018-04-12T14:46:58.088Z] INFO {"file":"main.go:15","Key":"val"}
 ```
 #### Improve efficiency
 ##### Return ```true``` value and output ```Err``` log if ``` err!=nil ```
 ```go
 err := errors.New("x")
-if alog.Check(err) {
+if alog.NotNil(err) {
     return err
 }
 // Output:
-[2018-04-18T00:34:19.946Z] ERR {"Error":"x","FileLine":"main.go:13"}
+[2018-04-18T00:34:19.946Z] ERR {"error":"x","file":"main.go:13"}
 ```
 ##### Does not output anything if Err==nil and continue code execution
 ```go
 var err error
-if alog.Check(err) {
+if alog.NotNil(err) {
     return err
 }
 // continue code execution
@@ -67,7 +67,7 @@ alog.Info("Error", nil)
 Does not output anything if Err==nil
 
 alog.Info("Error", errors.New("EOF"))
-[2018-04-12T14:51:41.19Z] INFO {"Error":"EOF","FileLine":"main.go:18"}
+[2018-04-12T14:51:41.19Z] INFO {"Error":"EOF","file":"main.go:18"}
 ```
 
 #### Standard log level [Syslog](https://en.wikipedia.org/wiki/Syslog)

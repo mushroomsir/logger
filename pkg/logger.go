@@ -20,11 +20,11 @@ type Log map[string]interface{}
 // Level represents logging level
 // https://tools.ietf.org/html/rfc5424
 // https://en.wikipedia.org/wiki/Syslog
-type Level uint32
 
 const (
+
 	// EmergLevel is 0, "Emergency", system is unusable
-	EmergLevel Level = iota
+	EmergLevel uint32 = iota
 	// AlertLevel is 1, "Alert", action must be taken immediately
 	AlertLevel
 	// CritiLevel is 2, "Critical", critical conditions
@@ -42,7 +42,17 @@ const (
 )
 
 var (
-	levels = []string{"EMERG", "ALERT", "CRIT", "ERR", "WARNING", "NOTICE", "INFO", "DEBUG"}
+	levels = map[uint32]string{
+		0: "EMERG",
+		1: "ALERT",
+		2: "CRIT",
+		3: "ERR",
+		4: "WARNING",
+		5: "NOTICE",
+		6: "INFO",
+		7: "DEBUG"}
+	message = "message"
+	file    = "file"
 )
 
 // Options ...
@@ -57,49 +67,56 @@ type Options struct {
 // New create logger instance
 func New(w io.Writer, options ...Options) *Logger {
 	logger := &Logger{
-		Out:        w,
-		enableJSON: true,
-		tf:         "2006-01-02T15:04:05.999Z",
-		lf:         "[%s] %s %s",
+		Out: w,
+		tf:  "2006-01-02T15:04:05.999Z",
+		lf:  "[%s] %s %s",
 	}
-	atomic.StoreUint32(&logger.ulevel, uint32(InfoLevel))
+	atomic.StoreUint32(&logger.ulevel, InfoLevel)
 	if len(options) == 0 {
 		return logger
 	}
 	opt := options[0]
+	logger.enableFileLine = opt.EnableFileLine
 	logger.enableJSON = opt.EnableJSON
+	logger.skip = opt.Skip
+	if logger.skip == 0 {
+		logger.skip = 3
+	}
 	if opt.TimeFormat != "" {
 		logger.tf = opt.TimeFormat
 	}
 	if opt.LogFormat != "" {
 		logger.lf = opt.LogFormat
 	}
-	if opt.Skip == 0 {
-		opt.Skip = 4
-	}
-	logger.opt = opt
 	return logger
 }
 
 // Logger ...
 type Logger struct {
-	Out        io.Writer
-	mu         sync.Mutex
-	tf, lf     string
-	enableJSON bool
-	ulevel     uint32
-	opt        Options
+	Out            io.Writer
+	mu             sync.Mutex
+	tf, lf         string
+	enableJSON     bool
+	ulevel         uint32
+	enableFileLine bool
+	skip           int
 }
 
-func (a *Logger) checkLogLevel(level Level) bool {
+func (a *Logger) checkLogLevel(level uint32) bool {
 	val := atomic.LoadUint32(&a.ulevel)
-	return uint32(level) <= val
+	return level <= val
+}
+
+// Level ...
+func (a *Logger) Level() uint32 {
+	val := atomic.LoadUint32(&a.ulevel)
+	return val
 }
 
 // SetLevel set the logger's log level
 // The default logger level is DebugLevel
-func (a *Logger) SetLevel(level Level) {
-	ulevel := uint32(7)
+func (a *Logger) SetLevel(level uint32) {
+	ulevel := uint32(6)
 	if level > 0 && level <= 7 {
 		ulevel = uint32(level)
 	}
@@ -107,7 +124,7 @@ func (a *Logger) SetLevel(level Level) {
 }
 
 // Output ...
-func (a *Logger) Output(t time.Time, level Level, s string) (err error) {
+func (a *Logger) Output(t time.Time, level uint32, s string) (err error) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	if l := len(s); l > 0 && s[l-1] == '\n' {
@@ -148,17 +165,19 @@ func (a *Logger) Warning(v ...interface{}) {
 	}
 }
 
-// Check ...
-func (a *Logger) Check(err error, v ...interface{}) bool {
-	if err != nil {
-		l := []interface{}{"Error", err}
-		for _, p := range v {
-			l = append(l, p)
-		}
-		a.Err(l...)
-		return true
+// NotNil ...
+func (a *Logger) NotNil(err interface{}, v ...interface{}) bool {
+	if IsNil(err) {
+		return false
 	}
-	return false
+	l := []interface{}{"error", err}
+	for _, p := range v {
+		l = append(l, p)
+	}
+	if a.checkLogLevel(ErrLevel) {
+		a.Output(time.Now(), ErrLevel, a.format(a.magic(l...)))
+	}
+	return true
 }
 
 // Err ...
@@ -189,11 +208,18 @@ func (a *Logger) Emerg(v ...interface{}) {
 	}
 }
 func (a *Logger) magic(v ...interface{}) interface{} {
-	if len(v) == 0 {
-		return ""
+	if !a.enableJSON {
+		return fmt.Sprint(v...)
 	}
 	m := make(map[string]interface{})
-	if len(v)%2 == 0 && a.enableJSON {
+	if a.enableFileLine {
+		m[file] = GetCaller(a.skip)
+	}
+	if len(v) == 0 {
+		m[message] = nil
+		return m
+	}
+	if len(v)%2 == 0 {
 		for i, val := range v {
 			if i%2 == 0 {
 				switch val.(type) {
@@ -210,60 +236,69 @@ func (a *Logger) magic(v ...interface{}) interface{} {
 				}
 			}
 		}
-		if a.opt.EnableFileLine {
-			m["FileLine"] = GetCaller(a.opt.Skip)
-		}
 		return m
 	}
 join:
-	if a.enableJSON {
-		m = make(map[string]interface{})
-		for i, val := range v {
-			m["msg"+strconv.Itoa(i+1)] = val
-		}
-		return m
+	for i, val := range v {
+		m[message+strconv.Itoa(i+1)] = val
 	}
-	return fmt.Sprint(v...)
+	return m
 }
 
 // Debugf ...
 func (a *Logger) Debugf(format string, args ...interface{}) {
-	a.Debug(fmt.Sprintf(format, args...))
+	if a.checkLogLevel(DebugLevel) {
+		a.Output(time.Now(), DebugLevel, a.format(a.magic(message, fmt.Sprintf(format, args...))))
+	}
 }
 
 // Infof ...
 func (a *Logger) Infof(format string, args ...interface{}) {
-	a.Info(fmt.Sprintf(format, args...))
+	if a.checkLogLevel(InfoLevel) {
+		a.Output(time.Now(), InfoLevel, a.format(a.magic(message, fmt.Sprintf(format, args...))))
+	}
 }
 
 // Noticef ...
 func (a *Logger) Noticef(format string, args ...interface{}) {
-	a.Notice(fmt.Sprintf(format, args...))
+	if a.checkLogLevel(NoticeLevel) {
+		a.Output(time.Now(), NoticeLevel, a.format(a.magic(message, fmt.Sprintf(format, args...))))
+	}
 }
 
 // Warningf ...
 func (a *Logger) Warningf(format string, args ...interface{}) {
-	a.Warning(fmt.Sprintf(format, args...))
+	if a.checkLogLevel(WarningLevel) {
+		a.Output(time.Now(), WarningLevel, a.format(a.magic(message, fmt.Sprintf(format, args...))))
+	}
 }
 
 // Errf ...
 func (a *Logger) Errf(format string, args ...interface{}) {
-	a.Err(fmt.Sprintf(format, args...))
+	if a.checkLogLevel(ErrLevel) {
+		a.Output(time.Now(), ErrLevel, a.format(a.magic(message, fmt.Sprintf(format, args...))))
+	}
 }
 
 // Critf ...
 func (a *Logger) Critf(format string, args ...interface{}) {
-	a.Crit(fmt.Sprintf(format, args...))
+	if a.checkLogLevel(CritiLevel) {
+		a.Output(time.Now(), CritiLevel, a.format(a.magic(message, fmt.Sprintf(format, args...))))
+	}
 }
 
 // Alertf ...
 func (a *Logger) Alertf(format string, args ...interface{}) {
-	a.Alert(fmt.Sprintf(format, args...))
+	if a.checkLogLevel(AlertLevel) {
+		a.Output(time.Now(), AlertLevel, a.format(a.magic(message, fmt.Sprintf(format, args...))))
+	}
 }
 
 // Emergf ...
 func (a *Logger) Emergf(format string, args ...interface{}) {
-	a.Emerg(fmt.Sprintf(format, args...))
+	if a.checkLogLevel(EmergLevel) {
+		a.Output(time.Now(), EmergLevel, a.format(a.magic(message, fmt.Sprintf(format, args...))))
+	}
 }
 
 func (a *Logger) format(v interface{}) string {
@@ -274,17 +309,15 @@ func (a *Logger) format(v interface{}) string {
 	switch val := v.(type) {
 	case Log:
 		isMarshal = true
-		val["FileLine"] = GetCaller(a.opt.Skip)
+		val[file] = GetCaller(a.skip)
 	case map[string]interface{}:
 		isMarshal = true
-		val["FileLine"] = GetCaller(a.opt.Skip)
-	case string:
-		return v.(string)
+		val[file] = GetCaller(a.skip)
 	}
 	if isMarshal {
 		res, err := json.Marshal(v)
 		if err == nil {
-			return string(res[:])
+			return string(res)
 		}
 	}
 	return fmt.Sprint(v)
@@ -308,12 +341,11 @@ func GetCaller(layer int) string {
 		line = 0
 	}
 	for _, d := range workingDir {
-		if d == "" {
-			continue
+		if d != "" {
+			file = strings.TrimPrefix(file, "/")
+			file = strings.TrimPrefix(file, d)
+			file = strings.TrimPrefix(file, "/")
 		}
-		file = strings.TrimPrefix(file, "/")
-		file = strings.TrimPrefix(file, d)
-		file = strings.TrimPrefix(file, "/")
 	}
 	return fmt.Sprintf("%s:%d", file, line)
 }

@@ -9,6 +9,14 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestLevel(t *testing.T) {
+	require := require.New(t)
+	SetLevel(6)
+	require.Equal(uint32(6), Level())
+
+	SetLevel(9)
+	require.Equal(uint32(6), Level())
+}
 func TestAlog(t *testing.T) {
 	require := require.New(t)
 
@@ -16,6 +24,7 @@ func TestAlog(t *testing.T) {
 	defaultLogger = pkg.New(buf, pkg.Options{
 		EnableJSON:     true,
 		EnableFileLine: true,
+		Skip:           4,
 	})
 	defaultLogger.SetLevel(pkg.DebugLevel)
 
@@ -35,28 +44,36 @@ func TestAlog(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		require.False(checkSugar("Error", nil))
-		c.fun("Error", nil)
-		require.Equal("", buf.String())
+		c.fun("error", "x")
+		require.Contains(buf.String(), c.level+` {"error":"x","file":"`)
 		buf.Reset()
 
-		require.False(checkSugar("Error", nil, "msg", "xx"))
-		c.fun("Error", nil, "msg", "xx")
-		require.Equal("", buf.String())
-		buf.Reset()
-
-		require.True(checkSugar("error", nil, "msg", "xx"))
 		c.fun("error", nil, "msg", "xx")
-		require.NotEqual("", buf.String())
+		require.Contains(buf.String(), c.level+` {"error":null,"file":"`)
 		buf.Reset()
+		c.fun("error", errors.New("xxx"), "msg", "xx")
+		require.Contains(buf.String(), c.level+` {"error":"xxx","file":"`)
+		buf.Reset()
+
+		c.funf("ccc")
+		require.Contains(buf.String(), "")
 	}
+
+	require.Equal(false, NotNil(nil))
+	require.Equal(true, NotNil(errors.New("error")))
+	require.Contains(buf.String(), `ERR {"error":"error","file":"alog_test.go:63`)
+	buf.Reset()
+	require.Equal(true, NotNil(errors.New("error"), "Userid", "123456"))
+	require.Contains(buf.String(), `"error":"error","file":"`)
+	require.Contains(buf.String(), `"Userid":"123456"`)
+	buf.Reset()
 
 	require.Equal(false, Check(nil))
 	require.Equal(true, Check(errors.New("error")))
-	require.Contains(buf.String(), `ERR {"Error":"error","FileLine":"`)
+	require.Contains(buf.String(), `ERR {"error":"error","file":"alog_test.go:72`)
 	buf.Reset()
 	require.Equal(true, Check(errors.New("error"), "Userid", "123456"))
-	require.Contains(buf.String(), `ERR {"Error":"error","FileLine":"`)
-	require.Contains(buf.String(), `,"Userid":"123456"`)
+	require.Contains(buf.String(), `"error":"error","file":"`)
+	require.Contains(buf.String(), `"Userid":"123456"`)
 	buf.Reset()
 }
