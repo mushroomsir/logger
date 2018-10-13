@@ -156,7 +156,8 @@ func TestCond(t *testing.T) {
 	require.Contains(buf.String(), `] DEBUG x`)
 
 	log := defaultLogger.format(Log{"x": 1})
-	require.Equal("{\"file\":\"C:/Go/src/testing/testing.go:827\",\"x\":1}", log)
+	require.Contains(log, "src/testing/testing.go")
+	require.Contains(log, `,"x":1`)
 	log = defaultLogger.format("X")
 	require.Equal("X", log)
 	log = defaultLogger.format(1)

@@ -17,7 +17,7 @@ go get -u github.com/mushroomsir/logger
 - Output ```JSON``` format 
 - Support ```KV```  syntactic sugar
 - Improve efficiency
-- Output ```Err``` automatically if ``` err!=nil ```
+- Output ```Err``` automatically if err not nil
 - Standard log level [Syslog](https://en.wikipedia.org/wiki/Syslog)
 - Flexible for custom
 - Control output by level
