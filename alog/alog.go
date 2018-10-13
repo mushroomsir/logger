@@ -23,24 +23,24 @@ func Level() uint32 {
 }
 
 // Debug ...
-func Debug(v ...interface{}) {
-	defaultLogger.Debug(v...)
+func Debug(kv ...interface{}) {
+	defaultLogger.Debug(kv...)
 
 }
 
 // Info ...
-func Info(v ...interface{}) {
-	defaultLogger.Info(v...)
+func Info(kv ...interface{}) {
+	defaultLogger.Info(kv...)
 }
 
 // Notice ...
-func Notice(v ...interface{}) {
-	defaultLogger.Notice(v...)
+func Notice(kv ...interface{}) {
+	defaultLogger.Notice(kv...)
 }
 
 // Warning ...
-func Warning(v ...interface{}) {
-	defaultLogger.Warning(v...)
+func Warning(kv ...interface{}) {
+	defaultLogger.Warning(kv...)
 }
 
 // Check was deprecated please use NotNil
@@ -70,23 +70,23 @@ func NotNil(err interface{}, kv ...interface{}) bool {
 }
 
 // Err ...
-func Err(v ...interface{}) {
-	defaultLogger.Err(v...)
+func Err(kv ...interface{}) {
+	defaultLogger.Err(kv...)
 }
 
 // Crit ...
-func Crit(v ...interface{}) {
-	defaultLogger.Crit(v...)
+func Crit(kv ...interface{}) {
+	defaultLogger.Crit(kv...)
 }
 
 // Alert ...
-func Alert(v ...interface{}) {
-	defaultLogger.Alert(v...)
+func Alert(kv ...interface{}) {
+	defaultLogger.Alert(kv...)
 }
 
 // Emerg ...
-func Emerg(v ...interface{}) {
-	defaultLogger.Emerg(v...)
+func Emerg(kv ...interface{}) {
+	defaultLogger.Emerg(kv...)
 }
 
 // Debugf ...

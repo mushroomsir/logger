@@ -116,9 +116,9 @@ func (a *Logger) Level() uint32 {
 // SetLevel set the logger's log level
 // The default logger level is DebugLevel
 func (a *Logger) SetLevel(level uint32) {
-	ulevel := uint32(6)
-	if level > 0 && level <= 7 {
-		ulevel = uint32(level)
+	ulevel := InfoLevel
+	if level >= 0 && level <= 7 {
+		ulevel = level
 	}
 	atomic.StoreUint32(&a.ulevel, ulevel)
 }
@@ -138,40 +138,40 @@ func (a *Logger) Output(t time.Time, level uint32, s string) (err error) {
 }
 
 // Debug ...
-func (a *Logger) Debug(v ...interface{}) {
+func (a *Logger) Debug(kv ...interface{}) {
 	if a.checkLogLevel(DebugLevel) {
-		a.Output(time.Now(), DebugLevel, a.format(a.magic(v...)))
+		a.Output(time.Now(), DebugLevel, a.format(a.magic(kv...)))
 	}
 }
 
 // Info ...
-func (a *Logger) Info(v ...interface{}) {
+func (a *Logger) Info(kv ...interface{}) {
 	if a.checkLogLevel(InfoLevel) {
-		a.Output(time.Now(), InfoLevel, a.format(a.magic(v...)))
+		a.Output(time.Now(), InfoLevel, a.format(a.magic(kv...)))
 	}
 }
 
 // Notice ...
-func (a *Logger) Notice(v ...interface{}) {
+func (a *Logger) Notice(kv ...interface{}) {
 	if a.checkLogLevel(NoticeLevel) {
-		a.Output(time.Now(), NoticeLevel, a.format(a.magic(v...)))
+		a.Output(time.Now(), NoticeLevel, a.format(a.magic(kv...)))
 	}
 }
 
 // Warning ...
-func (a *Logger) Warning(v ...interface{}) {
+func (a *Logger) Warning(kv ...interface{}) {
 	if a.checkLogLevel(WarningLevel) {
-		a.Output(time.Now(), WarningLevel, a.format(a.magic(v...)))
+		a.Output(time.Now(), WarningLevel, a.format(a.magic(kv...)))
 	}
 }
 
 // NotNil ...
-func (a *Logger) NotNil(err interface{}, v ...interface{}) bool {
+func (a *Logger) NotNil(err interface{}, kv ...interface{}) bool {
 	if IsNil(err) {
 		return false
 	}
 	l := []interface{}{"error", err}
-	for _, p := range v {
+	for _, p := range kv {
 		l = append(l, p)
 	}
 	if a.checkLogLevel(ErrLevel) {
@@ -181,50 +181,50 @@ func (a *Logger) NotNil(err interface{}, v ...interface{}) bool {
 }
 
 // Err ...
-func (a *Logger) Err(v ...interface{}) {
+func (a *Logger) Err(kv ...interface{}) {
 	if a.checkLogLevel(ErrLevel) {
-		a.Output(time.Now(), ErrLevel, a.format(a.magic(v...)))
+		a.Output(time.Now(), ErrLevel, a.format(a.magic(kv...)))
 	}
 }
 
 // Crit ...
-func (a *Logger) Crit(v ...interface{}) {
+func (a *Logger) Crit(kv ...interface{}) {
 	if a.checkLogLevel(CritiLevel) {
-		a.Output(time.Now(), CritiLevel, a.format(a.magic(v...)))
+		a.Output(time.Now(), CritiLevel, a.format(a.magic(kv...)))
 	}
 }
 
 // Alert ...
-func (a *Logger) Alert(v ...interface{}) {
+func (a *Logger) Alert(kv ...interface{}) {
 	if a.checkLogLevel(AlertLevel) {
-		a.Output(time.Now(), AlertLevel, a.format(a.magic(v...)))
+		a.Output(time.Now(), AlertLevel, a.format(a.magic(kv...)))
 	}
 }
 
 // Emerg ...
-func (a *Logger) Emerg(v ...interface{}) {
+func (a *Logger) Emerg(kv ...interface{}) {
 	if a.checkLogLevel(EmergLevel) {
-		a.Output(time.Now(), EmergLevel, a.format(a.magic(v...)))
+		a.Output(time.Now(), EmergLevel, a.format(a.magic(kv...)))
 	}
 }
-func (a *Logger) magic(v ...interface{}) interface{} {
+func (a *Logger) magic(kv ...interface{}) interface{} {
 	if !a.enableJSON {
-		return fmt.Sprint(v...)
+		return fmt.Sprint(kv...)
 	}
 	m := make(map[string]interface{})
 	if a.enableFileLine {
 		m[file] = GetCaller(a.skip)
 	}
-	if len(v) == 0 {
+	if len(kv) == 0 {
 		m[message] = nil
 		return m
 	}
-	if len(v)%2 == 0 {
-		for i, val := range v {
+	if len(kv)%2 == 0 {
+		for i, val := range kv {
 			if i%2 == 0 {
 				switch val.(type) {
 				case string:
-					rVal := v[i+1]
+					rVal := kv[i+1]
 					switch rVal.(type) {
 					case error:
 						m[val.(string)] = rVal.(error).Error()
@@ -239,7 +239,7 @@ func (a *Logger) magic(v ...interface{}) interface{} {
 		return m
 	}
 join:
-	for i, val := range v {
+	for i, val := range kv {
 		m[message+strconv.Itoa(i+1)] = val
 	}
 	return m
