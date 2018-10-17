@@ -7,97 +7,86 @@ import (
 )
 
 var defaultLogger = pkg.New(os.Stderr, pkg.Options{
-	EnableJSON:     true,
 	EnableFileLine: true,
+	EnableJSON:     true,
+	Skip:           4,
 })
 
-func checkSugar(v ...interface{}) bool {
-	if len(v) >= 2 && len(v)%2 == 0 && v[1] == nil {
-		if val, _ := v[0].(string); val == "Error" {
-			return false
-		}
-	}
-	return true
-}
-
 // SetLevel ...
-func SetLevel(level pkg.Level) {
+func SetLevel(level uint32) {
 	defaultLogger.SetLevel(level)
 }
 
-// SetLogLevel ...
-func SetLogLevel(level uint8) {
-	defaultLogger.SetLevel(pkg.Level(level))
+// Level ...
+func Level() uint32 {
+	return defaultLogger.Level()
 }
 
 // Debug ...
-func Debug(v ...interface{}) {
-	if checkSugar(v...) {
-		defaultLogger.Debug(v...)
-	}
+func Debug(kv ...interface{}) {
+	defaultLogger.Debug(kv...)
 
 }
 
 // Info ...
-func Info(v ...interface{}) {
-	if checkSugar(v...) {
-		defaultLogger.Info(v...)
-	}
+func Info(kv ...interface{}) {
+	defaultLogger.Info(kv...)
 }
 
 // Notice ...
-func Notice(v ...interface{}) {
-	if checkSugar(v...) {
-		defaultLogger.Notice(v...)
-	}
+func Notice(kv ...interface{}) {
+	defaultLogger.Notice(kv...)
 }
 
 // Warning ...
-func Warning(v ...interface{}) {
-	if checkSugar(v...) {
-		defaultLogger.Warning(v...)
-	}
+func Warning(kv ...interface{}) {
+	defaultLogger.Warning(kv...)
 }
 
-// Check ...
-func Check(err interface{}, v ...interface{}) bool {
-	if !pkg.IsNil(err) {
-		l := []interface{}{"Error", err}
-		for _, p := range v {
-			l = append(l, p)
-		}
-		defaultLogger.Err(l...)
-		return true
+// Check was deprecated please use NotNil
+func Check(err interface{}, kv ...interface{}) bool {
+	if pkg.IsNil(err) {
+		return false
 	}
-	return false
+	l := []interface{}{"error", err}
+	for _, p := range kv {
+		l = append(l, p)
+	}
+	defaultLogger.Err(l...)
+	return true
+}
+
+// NotNil ...
+func NotNil(err interface{}, kv ...interface{}) bool {
+	if pkg.IsNil(err) {
+		return false
+	}
+	l := []interface{}{"error", err}
+	for _, p := range kv {
+		l = append(l, p)
+	}
+	defaultLogger.Err(l...)
+	return true
 }
 
 // Err ...
-func Err(v ...interface{}) {
-	if checkSugar(v...) {
-		defaultLogger.Err(v...)
-	}
+func Err(kv ...interface{}) {
+	defaultLogger.Err(kv...)
 }
 
 // Crit ...
-func Crit(v ...interface{}) {
-	if checkSugar(v...) {
-		defaultLogger.Crit(v...)
-	}
+func Crit(kv ...interface{}) {
+	defaultLogger.Crit(kv...)
 }
 
 // Alert ...
-func Alert(v ...interface{}) {
-	if checkSugar(v...) {
-		defaultLogger.Alert(v...)
-	}
+func Alert(kv ...interface{}) {
+	defaultLogger.Alert(kv...)
 }
 
 // Emerg ...
-func Emerg(v ...interface{}) {
-	if checkSugar(v...) {
-		defaultLogger.Emerg(v...)
-	}
+func Emerg(kv ...interface{}) {
+	defaultLogger.Emerg(kv...)
 }
 
 // Debugf ...

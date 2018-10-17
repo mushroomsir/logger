@@ -2,8 +2,11 @@ language: go
 
 matrix:
   include:
-    - go: 1.8.x
+    - go: 1.9.x
+    - go: 1.10.x
+    - go: 1.11.x
     - master
+    - develop
 
 before_install:
   - go get -t -v ./...
@@ -12,9 +15,10 @@ before_install:
 
 script:
   - go test -v ./...
-  - go test -coverprofile=logger.coverprofile
+  - go test -coverprofile=pkg.coverprofile ./pkg
+  - go test -coverprofile=alog.coverprofile ./alog
   - gover
-  - goveralls -coverprofile=logger.coverprofile -service=travis-ci
+  - goveralls -coverprofile=gover.coverprofile -service=travis-ci
 
 notifications:
   email:
