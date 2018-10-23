@@ -140,28 +140,28 @@ func (a *Logger) Output(t time.Time, level uint32, s string) (err error) {
 // Debug ...
 func (a *Logger) Debug(kv ...interface{}) {
 	if a.checkLogLevel(DebugLevel) {
-		a.Output(time.Now(), DebugLevel, a.format(a.magic(kv...)))
+		a.Output(time.Now(), DebugLevel, a.magic(kv...))
 	}
 }
 
 // Info ...
 func (a *Logger) Info(kv ...interface{}) {
 	if a.checkLogLevel(InfoLevel) {
-		a.Output(time.Now(), InfoLevel, a.format(a.magic(kv...)))
+		a.Output(time.Now(), InfoLevel, a.magic(kv...))
 	}
 }
 
 // Notice ...
 func (a *Logger) Notice(kv ...interface{}) {
 	if a.checkLogLevel(NoticeLevel) {
-		a.Output(time.Now(), NoticeLevel, a.format(a.magic(kv...)))
+		a.Output(time.Now(), NoticeLevel, a.magic(kv...))
 	}
 }
 
 // Warning ...
 func (a *Logger) Warning(kv ...interface{}) {
 	if a.checkLogLevel(WarningLevel) {
-		a.Output(time.Now(), WarningLevel, a.format(a.magic(kv...)))
+		a.Output(time.Now(), WarningLevel, a.magic(kv...))
 	}
 }
 
@@ -175,7 +175,7 @@ func (a *Logger) NotNil(err interface{}, kv ...interface{}) bool {
 		l = append(l, p)
 	}
 	if a.checkLogLevel(ErrLevel) {
-		a.Output(time.Now(), ErrLevel, a.format(a.magic(l...)))
+		a.Output(time.Now(), ErrLevel, a.magic(l...))
 	}
 	return true
 }
@@ -183,144 +183,140 @@ func (a *Logger) NotNil(err interface{}, kv ...interface{}) bool {
 // Err ...
 func (a *Logger) Err(kv ...interface{}) {
 	if a.checkLogLevel(ErrLevel) {
-		a.Output(time.Now(), ErrLevel, a.format(a.magic(kv...)))
+		a.Output(time.Now(), ErrLevel, a.magic(kv...))
 	}
 }
 
 // Crit ...
 func (a *Logger) Crit(kv ...interface{}) {
 	if a.checkLogLevel(CritiLevel) {
-		a.Output(time.Now(), CritiLevel, a.format(a.magic(kv...)))
+		a.Output(time.Now(), CritiLevel, a.magic(kv...))
 	}
 }
 
 // Alert ...
 func (a *Logger) Alert(kv ...interface{}) {
 	if a.checkLogLevel(AlertLevel) {
-		a.Output(time.Now(), AlertLevel, a.format(a.magic(kv...)))
+		a.Output(time.Now(), AlertLevel, a.magic(kv...))
 	}
 }
 
 // Emerg ...
 func (a *Logger) Emerg(kv ...interface{}) {
 	if a.checkLogLevel(EmergLevel) {
-		a.Output(time.Now(), EmergLevel, a.format(a.magic(kv...)))
+		a.Output(time.Now(), EmergLevel, a.magic(kv...))
 	}
 }
-func (a *Logger) magic(kv ...interface{}) interface{} {
+func (a *Logger) magic(kv ...interface{}) string {
 	if !a.enableJSON {
 		return fmt.Sprint(kv...)
 	}
-	m := make(map[string]interface{})
+	m := Log{}
 	if a.enableFileLine {
 		m[file] = GetCaller(a.skip)
 	}
 	if len(kv) == 0 {
 		m[message] = nil
-		return m
-	}
-	if len(kv)%2 == 0 {
+	} else if len(kv) == 1 {
+		v := kv[0]
+		m1 := Log{}
+		switch val := v.(type) {
+		case Log:
+			m1 = val
+		case map[string]interface{}:
+			m1 = val
+		}
+		for k, v := range m1 {
+			m[k] = v
+		}
+	} else if len(kv)%2 == 0 {
+		m1 := Log{}
 		for i, val := range kv {
 			if i%2 == 0 {
-				switch val.(type) {
-				case string:
-					rVal := kv[i+1]
-					switch rVal.(type) {
-					case error:
-						m[val.(string)] = rVal.(error).Error()
-					default:
-						m[val.(string)] = rVal
-					}
+				key, ok := val.(string)
+				if !ok {
+					goto kv
+				}
+				rVal := kv[i+1]
+				switch rVal.(type) {
+				case error:
+					m1[key] = rVal.(error).Error()
 				default:
-					goto join
+					m1[key] = rVal
 				}
 			}
 		}
-		return m
+		for k, v := range m1 {
+			m[k] = v
+		}
+		goto json
 	}
-join:
+kv:
 	for i, val := range kv {
 		m[message+strconv.Itoa(i+1)] = val
 	}
-	return m
+json:
+	res, err := json.Marshal(m)
+	if err != nil {
+		res = []byte(fmt.Sprintf(`{"json-marshal-error":%v}`, err.Error()))
+	}
+	return string(res)
 }
 
 // Debugf ...
 func (a *Logger) Debugf(format string, args ...interface{}) {
 	if a.checkLogLevel(DebugLevel) {
-		a.Output(time.Now(), DebugLevel, a.format(a.magic(message, fmt.Sprintf(format, args...))))
+		a.Output(time.Now(), DebugLevel, a.magic(message, fmt.Sprintf(format, args...)))
 	}
 }
 
 // Infof ...
 func (a *Logger) Infof(format string, args ...interface{}) {
 	if a.checkLogLevel(InfoLevel) {
-		a.Output(time.Now(), InfoLevel, a.format(a.magic(message, fmt.Sprintf(format, args...))))
+		a.Output(time.Now(), InfoLevel, a.magic(message, fmt.Sprintf(format, args...)))
 	}
 }
 
 // Noticef ...
 func (a *Logger) Noticef(format string, args ...interface{}) {
 	if a.checkLogLevel(NoticeLevel) {
-		a.Output(time.Now(), NoticeLevel, a.format(a.magic(message, fmt.Sprintf(format, args...))))
+		a.Output(time.Now(), NoticeLevel, a.magic(message, fmt.Sprintf(format, args...)))
 	}
 }
 
 // Warningf ...
 func (a *Logger) Warningf(format string, args ...interface{}) {
 	if a.checkLogLevel(WarningLevel) {
-		a.Output(time.Now(), WarningLevel, a.format(a.magic(message, fmt.Sprintf(format, args...))))
+		a.Output(time.Now(), WarningLevel, a.magic(message, fmt.Sprintf(format, args...)))
 	}
 }
 
 // Errf ...
 func (a *Logger) Errf(format string, args ...interface{}) {
 	if a.checkLogLevel(ErrLevel) {
-		a.Output(time.Now(), ErrLevel, a.format(a.magic(message, fmt.Sprintf(format, args...))))
+		a.Output(time.Now(), ErrLevel, a.magic(message, fmt.Sprintf(format, args...)))
 	}
 }
 
 // Critf ...
 func (a *Logger) Critf(format string, args ...interface{}) {
 	if a.checkLogLevel(CritiLevel) {
-		a.Output(time.Now(), CritiLevel, a.format(a.magic(message, fmt.Sprintf(format, args...))))
+		a.Output(time.Now(), CritiLevel, a.magic(message, fmt.Sprintf(format, args...)))
 	}
 }
 
 // Alertf ...
 func (a *Logger) Alertf(format string, args ...interface{}) {
 	if a.checkLogLevel(AlertLevel) {
-		a.Output(time.Now(), AlertLevel, a.format(a.magic(message, fmt.Sprintf(format, args...))))
+		a.Output(time.Now(), AlertLevel, a.magic(message, fmt.Sprintf(format, args...)))
 	}
 }
 
 // Emergf ...
 func (a *Logger) Emergf(format string, args ...interface{}) {
 	if a.checkLogLevel(EmergLevel) {
-		a.Output(time.Now(), EmergLevel, a.format(a.magic(message, fmt.Sprintf(format, args...))))
+		a.Output(time.Now(), EmergLevel, a.magic(message, fmt.Sprintf(format, args...)))
 	}
-}
-
-func (a *Logger) format(v interface{}) string {
-	var isMarshal bool
-	if a.enableJSON {
-		isMarshal = true
-	}
-	switch val := v.(type) {
-	case Log:
-		isMarshal = true
-		val[file] = GetCaller(a.skip)
-	case map[string]interface{}:
-		isMarshal = true
-		val[file] = GetCaller(a.skip)
-	}
-	if isMarshal {
-		res, err := json.Marshal(v)
-		if err == nil {
-			return string(res)
-		}
-	}
-	return fmt.Sprint(v)
 }
 
 var workingDir []string
