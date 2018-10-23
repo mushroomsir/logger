@@ -6,3 +6,4 @@ testdata/download
 testdata/fileserver
 make.bat
 .vscode
+coverage

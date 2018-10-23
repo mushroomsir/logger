@@ -3,6 +3,7 @@ package pkg
 import (
 	"bytes"
 	"errors"
+	"math"
 	"testing"
 	"time"
 
@@ -49,11 +50,11 @@ func TestNotNil(t *testing.T) {
 
 	require.Equal(true, logger.NotNil(&myError{}))
 
-	require.Contains(buf.String(), `ERR {"error":"x","file":"logger_test.go:50`)
+	require.Contains(buf.String(), `ERR {"error":"x","file":"logger_test.go:51`)
 	buf.Reset()
 
 	require.Equal(true, logger.NotNil(errors.New("invalid args"), "Userid", "123456"))
-	require.Contains(buf.String(), `"error":"invalid args","file":"logger_test.go:55`)
+	require.Contains(buf.String(), `"error":"invalid args","file":"logger_test.go:56`)
 	require.Contains(buf.String(), `"Userid":"123456"`)
 	buf.Reset()
 
@@ -115,7 +116,6 @@ func TestLevel(t *testing.T) {
 		c.funf("ccc")
 		require.Contains(buf.String(), "")
 	}
-
 	require.Equal(false, defaultLogger.NotNil(nil))
 	require.Equal(true, defaultLogger.NotNil(errors.New("error")))
 	require.Contains(buf.String(), `ERR {"error":"error","file":"logger_test.go:120`)
@@ -135,35 +135,56 @@ func TestCond(t *testing.T) {
 		EnableFileLine: true,
 	})
 	defaultLogger.SetLevel(DebugLevel)
-	null := defaultLogger.magic().(map[string]interface{})
-	require.Equal(2, len(null))
+	null := defaultLogger.magic()
+	require.Contains(null, `,"message":null}`)
 	require.True(defaultLogger.NotNil("nil", "key", "value"))
 
-	null = defaultLogger.magic(1, "X").(map[string]interface{})
-	require.Equal(3, len(null))
-	null = defaultLogger.magic(1, "c", "b").(map[string]interface{})
-	require.Equal(4, len(null))
+	null = defaultLogger.magic(1, "X")
+	require.Contains(null, `,"message1":1,"message2":"X"}`)
+	null = defaultLogger.magic(1, "c", "b")
+	require.Contains(null, `,"message1":1,"message2":"c","message3":"b"}`)
 
 	defaultLogger = New(buf, Options{
-		EnableJSON:     false,
+		EnableJSON:     true,
 		EnableFileLine: true,
 	})
 	empty := defaultLogger.magic("")
-	require.Equal("", empty)
+	require.Contains(empty, `,"message1":""}`)
 	buf.Reset()
 
 	defaultLogger.Output(time.Now(), DebugLevel, "x\n")
 	require.Contains(buf.String(), `] DEBUG x`)
 
-	log := defaultLogger.format(Log{"x": 1})
-	require.Contains(log, "src/testing/testing.go")
+	buf.Reset()
+	log := defaultLogger.magic(Log{"x": 1})
 	require.Contains(log, `,"x":1`)
-	log = defaultLogger.format("X")
+
+	buf.Reset()
+	log = defaultLogger.magic(map[string]interface{}{"x": 1})
+	require.Contains(log, `,"x":1`)
+
+	buf.Reset()
+	log = defaultLogger.magic("key", "val")
+	require.Contains(log, `,"key":"val"}`)
+
+	buf.Reset()
+	log = defaultLogger.magic("key", math.NaN())
+	require.Equal(log, `{"json-marshal-error":json: unsupported value: NaN}`)
+
+	defaultLogger = New(buf, Options{
+		EnableJSON:     false,
+		EnableFileLine: true,
+	})
+	buf.Reset()
+	log = defaultLogger.magic("X")
 	require.Equal("X", log)
-	log = defaultLogger.format(1)
+	log = defaultLogger.magic(1)
 	require.Equal("1", log)
+	log = defaultLogger.magic(1, "X")
+	require.Equal("1X", log)
 
 	require.NotEmpty(Stack())
 
 	require.Equal("can not find source file:0", GetCaller(100))
+
 }
