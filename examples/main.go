@@ -22,6 +22,10 @@ func main() {
 	alog.Info(1, "x")
 	alog.Info("Error", errors.New("EOF"))
 
+	alog.Info(map[string]interface{}{
+		"intstr": 1,
+	})
+
 	logger := pkg.New(os.Stderr, pkg.Options{
 		EnableJSON:     true,
 		EnableFileLine: true,
