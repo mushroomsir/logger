@@ -14,8 +14,8 @@ import (
 	"time"
 )
 
-// Log ...
-type Log map[string]interface{}
+// log ...
+type log map[string]interface{}
 
 // Level represents logging level
 // https://tools.ietf.org/html/rfc5424
@@ -211,26 +211,24 @@ func (a *Logger) magic(kv ...interface{}) string {
 	if !a.enableJSON {
 		return fmt.Sprint(kv...)
 	}
-	m := Log{}
+	m := log{}
 	if a.enableFileLine {
 		m[file] = GetCaller(a.skip)
 	}
 	if len(kv) == 0 {
 		m[message] = nil
-	} else if len(kv) == 1 {
-		v := kv[0]
-		m1 := Log{}
-		switch val := v.(type) {
-		case Log:
-			m1 = val
-		case map[string]interface{}:
-			m1 = val
+		return a.jsonStr(m)
+	}
+	if len(kv) == 1 {
+		if val, ok := kv[0].(map[string]interface{}); ok {
+			for k, v := range val {
+				m[k] = v
+			}
+			return a.jsonStr(m)
 		}
-		for k, v := range m1 {
-			m[k] = v
-		}
-	} else if len(kv)%2 == 0 {
-		m1 := Log{}
+	}
+	if len(kv)%2 == 0 {
+		m1 := log{}
 		for i, val := range kv {
 			if i%2 == 0 {
 				key, ok := val.(string)
@@ -256,6 +254,9 @@ kv:
 		m[message+strconv.Itoa(i+1)] = val
 	}
 json:
+	return a.jsonStr(m)
+}
+func (a *Logger) jsonStr(m log) string {
 	res, err := json.Marshal(m)
 	if err != nil {
 		res = []byte(fmt.Sprintf(`{"json-marshal-error":%v}`, err.Error()))

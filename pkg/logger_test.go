@@ -156,11 +156,7 @@ func TestCond(t *testing.T) {
 	require.Contains(buf.String(), `] DEBUG x`)
 
 	buf.Reset()
-	log := defaultLogger.magic(Log{"x": 1})
-	require.Contains(log, `,"x":1`)
-
-	buf.Reset()
-	log = defaultLogger.magic(map[string]interface{}{"x": 1})
+	log := defaultLogger.magic(map[string]interface{}{"x": 1})
 	require.Contains(log, `,"x":1`)
 
 	buf.Reset()
