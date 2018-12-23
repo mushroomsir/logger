@@ -56,6 +56,11 @@ func Check(err interface{}, kv ...interface{}) bool {
 	return true
 }
 
+// IsNil ...
+func IsNil(err interface{}, kv ...interface{}) bool {
+	return !NotNil(err, kv)
+}
+
 // NotNil ...
 func NotNil(err interface{}, kv ...interface{}) bool {
 	if pkg.IsNil(err) {
