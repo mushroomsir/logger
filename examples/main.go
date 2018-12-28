@@ -25,13 +25,12 @@ func main() {
 	alog.Info(map[string]interface{}{
 		"intstr": 1,
 	})
+	alog.Infof("display message field")
 
 	logger := pkg.New(os.Stderr, pkg.Options{
 		EnableJSON:     true,
 		EnableFileLine: true,
 	})
 	logger.Notice("msg", "content")
-	//output: [2017-10-11T02:48:28.598Z] NOTICE {"msg":"content"}
 	logger.Err("msg", "content", "code", 500)
-	//output: [2017-09-29T05:27:10.639Z] ERR {"code":500,"msg":"content"}
 }

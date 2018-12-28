@@ -53,6 +53,7 @@ var (
 		7: "DEBUG"}
 	message = "message"
 	file    = "file"
+	goID    = "goID"
 )
 
 // Options ...
@@ -61,6 +62,7 @@ type Options struct {
 	TimeFormat     string
 	EnableJSON     bool
 	EnableFileLine bool
+	EnableGoID     bool
 	Skip           int
 }
 
@@ -78,6 +80,7 @@ func New(w io.Writer, options ...Options) *Logger {
 	opt := options[0]
 	logger.enableFileLine = opt.EnableFileLine
 	logger.enableJSON = opt.EnableJSON
+	logger.enableGoID = opt.EnableGoID
 	logger.skip = opt.Skip
 	if logger.skip == 0 {
 		logger.skip = 3
@@ -99,6 +102,7 @@ type Logger struct {
 	enableJSON     bool
 	ulevel         uint32
 	enableFileLine bool
+	enableGoID     bool
 	skip           int
 }
 
@@ -163,6 +167,11 @@ func (a *Logger) Warning(kv ...interface{}) {
 	if a.checkLogLevel(WarningLevel) {
 		a.Output(time.Now(), WarningLevel, a.magic(kv...))
 	}
+}
+
+// IsNil ...
+func (a *Logger) IsNil(err interface{}, kv ...interface{}) bool {
+	return !a.NotNil(err, kv)
 }
 
 // NotNil ...
@@ -257,6 +266,9 @@ json:
 	return a.jsonStr(m)
 }
 func (a *Logger) jsonStr(m log) string {
+	if a.enableGoID {
+		m[goID] = GoroutineID()
+	}
 	res, err := json.Marshal(m)
 	if err != nil {
 		res = []byte(fmt.Sprintf(`{"json-marshal-error":%v}`, err.Error()))

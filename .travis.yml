@@ -6,7 +6,6 @@ matrix:
     - go: 1.10.x
     - go: 1.11.x
     - master
-    - develop
 
 before_install:
   - go get -t -v ./...

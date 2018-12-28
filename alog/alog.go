@@ -10,6 +10,7 @@ var defaultLogger = pkg.New(os.Stderr, pkg.Options{
 	EnableFileLine: true,
 	EnableJSON:     true,
 	Skip:           4,
+	EnableGoID:     true,
 })
 
 // SetLevel ...

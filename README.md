@@ -59,23 +59,16 @@ if alog.NotNil(err) {
 }
 // continue code execution
 ```
-#### Output ```Err``` automatically if ``` err!=nil ```
-
-```go
-alog.Info("Error", nil)
-// Output:
-Does not output anything if Err==nil
-
-alog.Info("Error", errors.New("EOF"))
-[2018-04-12T14:51:41.19Z] INFO {"Error":"EOF","file":"main.go:18"}
-```
 
 #### Standard log level [Syslog](https://en.wikipedia.org/wiki/Syslog)
 
 ```go
 alog.Debug()
+alog.Debugf()
 alog.Info()
+alog.Infof()
 alog.Warning()
+alog.Warningf()
 ...
 ```
 
