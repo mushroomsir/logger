@@ -59,7 +59,15 @@ func Check(err interface{}, kv ...interface{}) bool {
 
 // IsNil ...
 func IsNil(err interface{}, kv ...interface{}) bool {
-	return !NotNil(err, kv)
+	if pkg.IsNil(err) {
+		return true
+	}
+	l := []interface{}{"error", err}
+	for _, p := range kv {
+		l = append(l, p)
+	}
+	defaultLogger.Err(l...)
+	return false
 }
 
 // NotNil ...
