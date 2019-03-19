@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"os"
-	"path/filepath"
 	"runtime"
 	"strconv"
 	"strings"
@@ -242,7 +240,7 @@ func (a *Logger) magic(kv ...interface{}) string {
 			if i%2 == 0 {
 				key, ok := val.(string)
 				if !ok {
-					goto kv
+					goto kvBlock
 				}
 				rVal := kv[i+1]
 				switch rVal.(type) {
@@ -256,13 +254,13 @@ func (a *Logger) magic(kv ...interface{}) string {
 		for k, v := range m1 {
 			m[k] = v
 		}
-		goto json
+		goto jsonBlock
 	}
-kv:
+kvBlock:
 	for i, val := range kv {
 		m[message+strconv.Itoa(i+1)] = val
 	}
-json:
+jsonBlock:
 	return a.jsonStr(m)
 }
 func (a *Logger) jsonStr(m log) string {
@@ -332,16 +330,6 @@ func (a *Logger) Emergf(format string, args ...interface{}) {
 	}
 }
 
-var workingDir []string
-
-func init() {
-	wd, err := os.Getwd()
-	if err == nil {
-		dir := filepath.ToSlash(wd)
-		workingDir = strings.Split(dir, "/")
-	}
-}
-
 // GetCaller ...
 func GetCaller(layer int) string {
 	_, file, line, ok := runtime.Caller(layer)
@@ -349,12 +337,10 @@ func GetCaller(layer int) string {
 		file = "can not find source file"
 		line = 0
 	}
-	for _, d := range workingDir {
-		if d != "" {
-			file = strings.TrimPrefix(file, "/")
-			file = strings.TrimPrefix(file, d)
-			file = strings.TrimPrefix(file, "/")
-		}
+	files := strings.Split(file, "/")
+	if len(files) > 3 {
+		filesLen := len(files)
+		file = files[filesLen-3] + "/" + files[filesLen-2] + "/" + files[filesLen-1]
 	}
 	return fmt.Sprintf("%s:%d", file, line)
 }

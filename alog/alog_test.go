@@ -61,7 +61,7 @@ func TestAlog(t *testing.T) {
 
 	require.Equal(false, NotNil(nil))
 	require.Equal(true, NotNil(errors.New("error")))
-	require.Contains(buf.String(), `ERR {"error":"error","file":"alog_test.go:63`)
+	require.Contains(buf.String(), `ERR {"error":"error","file":"logger/alog/alog_test.go:63`)
 	buf.Reset()
 	require.Equal(true, NotNil(errors.New("error"), "Userid", "123456"))
 	require.Contains(buf.String(), `"error":"error","file":"`)
@@ -70,7 +70,7 @@ func TestAlog(t *testing.T) {
 
 	require.Equal(false, Check(nil))
 	require.Equal(true, Check(errors.New("error")))
-	require.Contains(buf.String(), `ERR {"error":"error","file":"alog_test.go:72`)
+	require.Contains(buf.String(), `ERR {"error":"error","file":"logger/alog/alog_test.go:72`)
 	buf.Reset()
 	require.Equal(true, Check(errors.New("error"), "Userid", "123456"))
 	require.Contains(buf.String(), `"error":"error","file":"`)

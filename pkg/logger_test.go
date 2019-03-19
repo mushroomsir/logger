@@ -50,11 +50,11 @@ func TestNotNil(t *testing.T) {
 
 	require.Equal(true, logger.NotNil(&myError{}))
 
-	require.Contains(buf.String(), `ERR {"error":"x","file":"logger_test.go:51`)
+	require.Contains(buf.String(), `ERR {"error":"x","file":"logger/pkg/logger_test.go:51`)
 	buf.Reset()
 
 	require.Equal(true, logger.NotNil(errors.New("invalid args"), "Userid", "123456"))
-	require.Contains(buf.String(), `"error":"invalid args","file":"logger_test.go:56`)
+	require.Contains(buf.String(), `"error":"invalid args","file":"logger/pkg/logger_test.go:56`)
 	require.Contains(buf.String(), `"Userid":"123456"`)
 	buf.Reset()
 
@@ -118,7 +118,7 @@ func TestLevel(t *testing.T) {
 	}
 	require.Equal(false, defaultLogger.NotNil(nil))
 	require.Equal(true, defaultLogger.NotNil(errors.New("error")))
-	require.Contains(buf.String(), `ERR {"error":"error","file":"logger_test.go:120`)
+	require.Contains(buf.String(), `ERR {"error":"error","file":"logger/pkg/logger_test.go:120`)
 	buf.Reset()
 	require.Equal(true, defaultLogger.NotNil(errors.New("error"), "Userid", "123456"))
 	require.Contains(buf.String(), `"error":"error","file":"`)
