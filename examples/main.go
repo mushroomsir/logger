@@ -12,6 +12,7 @@ func main() {
 	alog.Info()
 	alog.Info(nil)
 	alog.IsNil(errors.New("is nil"))
+	alog.Info(errors.New("xxx"))
 	alog.NotNil(errors.New("error"))
 	// Simple model
 	alog.Info("hello world")

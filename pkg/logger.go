@@ -258,7 +258,13 @@ func (a *Logger) magic(kv ...interface{}) string {
 	}
 kvBlock:
 	for i, val := range kv {
-		m[message+strconv.Itoa(i+1)] = val
+		key := message + strconv.Itoa(i+1)
+		switch val.(type) {
+		case error:
+			m[key] = val.(error).Error()
+		default:
+			m[key] = val
+		}
 	}
 jsonBlock:
 	return a.jsonStr(m)
