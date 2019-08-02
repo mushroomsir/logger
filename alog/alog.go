@@ -14,8 +14,13 @@ var defaultLogger = pkg.New(os.Stderr, pkg.Options{
 })
 
 // SetLevel ...
-func SetLevel(level uint32) {
-	defaultLogger.SetLevel(level)
+func SetLevel(level uint32) *pkg.Logger {
+	return defaultLogger.SetLevel(level)
+}
+
+// SetJSONLog set the logger writing JSON string log.
+func SetJSONLog() *pkg.Logger {
+	return defaultLogger.SetJSONLog()
 }
 
 // Level ...

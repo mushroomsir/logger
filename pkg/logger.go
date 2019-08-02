@@ -102,6 +102,7 @@ type Logger struct {
 	enableFileLine bool
 	enableGoID     bool
 	skip           int
+	json           bool
 }
 
 func (a *Logger) checkLogLevel(level uint32) bool {
@@ -117,24 +118,50 @@ func (a *Logger) Level() uint32 {
 
 // SetLevel set the logger's log level
 // The default logger level is DebugLevel
-func (a *Logger) SetLevel(level uint32) {
+func (a *Logger) SetLevel(level uint32) *Logger {
 	ulevel := InfoLevel
 	if level >= 0 && level <= 7 {
 		ulevel = level
 	}
 	atomic.StoreUint32(&a.ulevel, ulevel)
+	return a
+}
+
+// SetJSONLog set the logger writing JSON string log.
+func (a *Logger) SetJSONLog() *Logger {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	a.json = true
+	return a
 }
 
 // Output ...
-func (a *Logger) Output(t time.Time, level uint32, s string) (err error) {
-	a.mu.Lock()
-	defer a.mu.Unlock()
-	if l := len(s); l > 0 && s[l-1] == '\n' {
-		s = s[0 : l-1]
-	}
-	_, err = fmt.Fprintf(a.Out, a.lf, t.UTC().Format(a.tf), levels[level], s)
-	if err == nil {
-		a.Out.Write([]byte{'\n'})
+func (a *Logger) Output(t time.Time, level uint32, v interface{}) (err error) {
+	logObj := format2Log(v)
+	if a.json {
+		logObj["timestamp"] = t.Format(a.tf)
+		logObj["level"] = levels[level]
+
+		str := a.jsonFormat(logObj)
+
+		a.mu.Lock()
+		defer a.mu.Unlock()
+		_, err = fmt.Fprint(a.Out, str)
+		if err == nil {
+			a.Out.Write([]byte{'\n'})
+		}
+	} else {
+		str := a.jsonFormat(logObj)
+
+		a.mu.Lock()
+		defer a.mu.Unlock()
+		if l := len(str); l > 0 && str[l-1] == '\n' {
+			str = str[0 : l-1]
+		}
+		_, err = fmt.Fprintf(a.Out, a.lf, t.UTC().Format(a.tf), levels[level], str)
+		if err == nil {
+			a.Out.Write([]byte{'\n'})
+		}
 	}
 	return
 }
@@ -214,7 +241,8 @@ func (a *Logger) Emerg(kv ...interface{}) {
 		a.Output(time.Now(), EmergLevel, a.magic(kv...))
 	}
 }
-func (a *Logger) magic(kv ...interface{}) string {
+
+func (a *Logger) magic(kv ...interface{}) interface{} {
 	if !a.enableJSON {
 		return fmt.Sprint(kv...)
 	}
@@ -224,14 +252,14 @@ func (a *Logger) magic(kv ...interface{}) string {
 	}
 	if len(kv) == 0 {
 		m[message] = nil
-		return a.jsonStr(m)
+		return m
 	}
 	if len(kv) == 1 {
 		if val, ok := kv[0].(map[string]interface{}); ok {
 			for k, v := range val {
 				m[k] = v
 			}
-			return a.jsonStr(m)
+			return m
 		}
 	}
 	if len(kv)%2 == 0 {
@@ -267,9 +295,9 @@ kvBlock:
 		}
 	}
 jsonBlock:
-	return a.jsonStr(m)
+	return m
 }
-func (a *Logger) jsonStr(m log) string {
+func (a *Logger) jsonFormat(m log) string {
 	if a.enableGoID {
 		m[goID] = GoroutineID()
 	}
@@ -356,4 +384,15 @@ func Stack() string {
 	buf := make([]byte, 4098)
 	n := runtime.Stack(buf, false)
 	return string(buf[:n])
+}
+
+func format2Log(i interface{}) log {
+	switch v := i.(type) {
+	case log:
+		return v
+	case map[string]interface{}:
+		return log(v)
+	default:
+		return log{"message": fmt.Sprint(i)}
+	}
 }

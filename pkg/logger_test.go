@@ -2,10 +2,10 @@ package pkg
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"math"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/require"
 )
@@ -136,36 +136,44 @@ func TestCond(t *testing.T) {
 	})
 	defaultLogger.SetLevel(DebugLevel)
 	null := defaultLogger.magic()
-	require.Contains(null, `,"message":null}`)
+	logObj := format2Log(null)
+	require.Equal(nil, logObj["message"])
 	require.True(defaultLogger.NotNil("nil", "key", "value"))
 
 	null = defaultLogger.magic(1, "X")
-	require.Contains(null, `,"message1":1,"message2":"X"}`)
+	logObj = format2Log(null)
+	require.Equal(1, logObj["message1"])
+	require.Equal("X", logObj["message2"])
+
 	null = defaultLogger.magic(1, "c", "b")
-	require.Contains(null, `,"message1":1,"message2":"c","message3":"b"}`)
+	logObj = format2Log(null)
+	require.Equal(1, logObj["message1"])
+	require.Equal("c", logObj["message2"])
+	require.Equal("b", logObj["message3"])
 
 	defaultLogger = New(buf, Options{
 		EnableJSON:     true,
 		EnableFileLine: true,
 	})
 	empty := defaultLogger.magic("")
-	require.Contains(empty, `,"message1":""}`)
+	logObj = format2Log(empty)
+	require.Equal("", logObj["message1"])
 	buf.Reset()
-
-	defaultLogger.Output(time.Now(), DebugLevel, "x\n")
-	require.Contains(buf.String(), `] DEBUG x`)
 
 	buf.Reset()
 	log := defaultLogger.magic(map[string]interface{}{"x": 1})
-	require.Contains(log, `,"x":1`)
+	logObj = format2Log(log)
+	require.Equal(1, logObj["x"])
 
 	buf.Reset()
 	log = defaultLogger.magic("key", "val")
-	require.Contains(log, `,"key":"val"}`)
+	logObj = format2Log(log)
+	require.Equal("val", logObj["key"])
 
 	buf.Reset()
 	log = defaultLogger.magic("key", math.NaN())
-	require.Equal(log, `{"json-marshal-error":json: unsupported value: NaN}`)
+	logObj = format2Log(log)
+	require.NotNil(logObj["key"])
 
 	defaultLogger = New(buf, Options{
 		EnableJSON:     false,
@@ -173,14 +181,38 @@ func TestCond(t *testing.T) {
 	})
 	buf.Reset()
 	log = defaultLogger.magic("X")
-	require.Equal("X", log)
+	logObj = format2Log(log)
+	require.Equal("X", logObj["message"])
+
 	log = defaultLogger.magic(1)
-	require.Equal("1", log)
+	logObj = format2Log(log)
+	require.Equal("1", logObj["message"])
+
 	log = defaultLogger.magic(1, "X")
-	require.Equal("1X", log)
+	logObj = format2Log(log)
+	require.Equal("1X", logObj["message"])
 
 	require.NotEmpty(Stack())
 
 	require.Equal("can not find source file:0", GetCaller(100))
 
+}
+
+func TestJsonLog(t *testing.T) {
+	require := require.New(t)
+	buf := new(bytes.Buffer)
+	defaultLogger := New(buf, Options{
+		EnableJSON:     true,
+		EnableFileLine: true,
+	})
+	defaultLogger.SetJSONLog()
+	defaultLogger.Info("a", "1")
+
+	v := map[string]string{}
+	err := json.Unmarshal(buf.Bytes(), &v)
+	require.Nil(err)
+	require.Equal("1", v["a"])
+	require.Equal("INFO", v["level"])
+	require.NotEmpty(v["timestamp"])
+	require.NotEmpty(v["file"])
 }

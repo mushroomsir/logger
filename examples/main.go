@@ -35,4 +35,12 @@ func main() {
 	})
 	logger.Notice("msg", "content")
 	logger.Err("msg", "content", "code", 500)
+
+	logger.SetJSONLog()
+	logger.Err("a", "n")
+	logger.Info(map[string]interface{}{
+		"intstr": 1,
+	})
+	logger.Info("Error", nil)
+	logger.Info(1, "x")
 }

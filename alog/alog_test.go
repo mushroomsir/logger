@@ -2,6 +2,7 @@ package alog
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"testing"
 
@@ -61,7 +62,7 @@ func TestAlog(t *testing.T) {
 
 	require.Equal(false, NotNil(nil))
 	require.Equal(true, NotNil(errors.New("error")))
-	require.Contains(buf.String(), `ERR {"error":"error","file":"logger/alog/alog_test.go:63`)
+	require.Contains(buf.String(), `ERR {"error":"error","file":"logger/alog/alog_test.go:64`)
 	buf.Reset()
 	require.Equal(true, NotNil(errors.New("error"), "Userid", "123456"))
 	require.Contains(buf.String(), `"error":"error","file":"`)
@@ -70,10 +71,21 @@ func TestAlog(t *testing.T) {
 
 	require.Equal(false, Check(nil))
 	require.Equal(true, Check(errors.New("error")))
-	require.Contains(buf.String(), `ERR {"error":"error","file":"logger/alog/alog_test.go:72`)
+	require.Contains(buf.String(), `ERR {"error":"error","file":"logger/alog/alog_test.go:73`)
 	buf.Reset()
 	require.Equal(true, Check(errors.New("error"), "Userid", "123456"))
 	require.Contains(buf.String(), `"error":"error","file":"`)
 	require.Contains(buf.String(), `"Userid":"123456"`)
 	buf.Reset()
+
+	defaultLogger.SetJSONLog()
+	defaultLogger.Info("a", "1")
+
+	v := map[string]string{}
+	err := json.Unmarshal(buf.Bytes(), &v)
+	require.Nil(err)
+	require.Equal("1", v["a"])
+	require.Equal("INFO", v["level"])
+	require.NotEmpty(v["timestamp"])
+	require.NotEmpty(v["file"])
 }
