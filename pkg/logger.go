@@ -169,28 +169,28 @@ func (a *Logger) Output(t time.Time, level uint32, v interface{}) (err error) {
 // Debug ...
 func (a *Logger) Debug(kv ...interface{}) {
 	if a.checkLogLevel(DebugLevel) {
-		a.Output(time.Now(), DebugLevel, a.magic(kv...))
+		a.Output(time.Now().UTC(), DebugLevel, a.magic(kv...))
 	}
 }
 
 // Info ...
 func (a *Logger) Info(kv ...interface{}) {
 	if a.checkLogLevel(InfoLevel) {
-		a.Output(time.Now(), InfoLevel, a.magic(kv...))
+		a.Output(time.Now().UTC(), InfoLevel, a.magic(kv...))
 	}
 }
 
 // Notice ...
 func (a *Logger) Notice(kv ...interface{}) {
 	if a.checkLogLevel(NoticeLevel) {
-		a.Output(time.Now(), NoticeLevel, a.magic(kv...))
+		a.Output(time.Now().UTC(), NoticeLevel, a.magic(kv...))
 	}
 }
 
 // Warning ...
 func (a *Logger) Warning(kv ...interface{}) {
 	if a.checkLogLevel(WarningLevel) {
-		a.Output(time.Now(), WarningLevel, a.magic(kv...))
+		a.Output(time.Now().UTC(), WarningLevel, a.magic(kv...))
 	}
 }
 
@@ -209,7 +209,7 @@ func (a *Logger) NotNil(err interface{}, kv ...interface{}) bool {
 		l = append(l, p)
 	}
 	if a.checkLogLevel(ErrLevel) {
-		a.Output(time.Now(), ErrLevel, a.magic(l...))
+		a.Output(time.Now().UTC(), ErrLevel, a.magic(l...))
 	}
 	return true
 }
@@ -217,28 +217,28 @@ func (a *Logger) NotNil(err interface{}, kv ...interface{}) bool {
 // Err ...
 func (a *Logger) Err(kv ...interface{}) {
 	if a.checkLogLevel(ErrLevel) {
-		a.Output(time.Now(), ErrLevel, a.magic(kv...))
+		a.Output(time.Now().UTC(), ErrLevel, a.magic(kv...))
 	}
 }
 
 // Crit ...
 func (a *Logger) Crit(kv ...interface{}) {
 	if a.checkLogLevel(CritiLevel) {
-		a.Output(time.Now(), CritiLevel, a.magic(kv...))
+		a.Output(time.Now().UTC(), CritiLevel, a.magic(kv...))
 	}
 }
 
 // Alert ...
 func (a *Logger) Alert(kv ...interface{}) {
 	if a.checkLogLevel(AlertLevel) {
-		a.Output(time.Now(), AlertLevel, a.magic(kv...))
+		a.Output(time.Now().UTC(), AlertLevel, a.magic(kv...))
 	}
 }
 
 // Emerg ...
 func (a *Logger) Emerg(kv ...interface{}) {
 	if a.checkLogLevel(EmergLevel) {
-		a.Output(time.Now(), EmergLevel, a.magic(kv...))
+		a.Output(time.Now().UTC(), EmergLevel, a.magic(kv...))
 	}
 }
 
@@ -311,56 +311,56 @@ func (a *Logger) jsonFormat(m log) string {
 // Debugf ...
 func (a *Logger) Debugf(format string, args ...interface{}) {
 	if a.checkLogLevel(DebugLevel) {
-		a.Output(time.Now(), DebugLevel, a.magic(message, fmt.Sprintf(format, args...)))
+		a.Output(time.Now().UTC(), DebugLevel, a.magic(message, fmt.Sprintf(format, args...)))
 	}
 }
 
 // Infof ...
 func (a *Logger) Infof(format string, args ...interface{}) {
 	if a.checkLogLevel(InfoLevel) {
-		a.Output(time.Now(), InfoLevel, a.magic(message, fmt.Sprintf(format, args...)))
+		a.Output(time.Now().UTC(), InfoLevel, a.magic(message, fmt.Sprintf(format, args...)))
 	}
 }
 
 // Noticef ...
 func (a *Logger) Noticef(format string, args ...interface{}) {
 	if a.checkLogLevel(NoticeLevel) {
-		a.Output(time.Now(), NoticeLevel, a.magic(message, fmt.Sprintf(format, args...)))
+		a.Output(time.Now().UTC(), NoticeLevel, a.magic(message, fmt.Sprintf(format, args...)))
 	}
 }
 
 // Warningf ...
 func (a *Logger) Warningf(format string, args ...interface{}) {
 	if a.checkLogLevel(WarningLevel) {
-		a.Output(time.Now(), WarningLevel, a.magic(message, fmt.Sprintf(format, args...)))
+		a.Output(time.Now().UTC(), WarningLevel, a.magic(message, fmt.Sprintf(format, args...)))
 	}
 }
 
 // Errf ...
 func (a *Logger) Errf(format string, args ...interface{}) {
 	if a.checkLogLevel(ErrLevel) {
-		a.Output(time.Now(), ErrLevel, a.magic(message, fmt.Sprintf(format, args...)))
+		a.Output(time.Now().UTC(), ErrLevel, a.magic(message, fmt.Sprintf(format, args...)))
 	}
 }
 
 // Critf ...
 func (a *Logger) Critf(format string, args ...interface{}) {
 	if a.checkLogLevel(CritiLevel) {
-		a.Output(time.Now(), CritiLevel, a.magic(message, fmt.Sprintf(format, args...)))
+		a.Output(time.Now().UTC(), CritiLevel, a.magic(message, fmt.Sprintf(format, args...)))
 	}
 }
 
 // Alertf ...
 func (a *Logger) Alertf(format string, args ...interface{}) {
 	if a.checkLogLevel(AlertLevel) {
-		a.Output(time.Now(), AlertLevel, a.magic(message, fmt.Sprintf(format, args...)))
+		a.Output(time.Now().UTC(), AlertLevel, a.magic(message, fmt.Sprintf(format, args...)))
 	}
 }
 
 // Emergf ...
 func (a *Logger) Emergf(format string, args ...interface{}) {
 	if a.checkLogLevel(EmergLevel) {
-		a.Output(time.Now(), EmergLevel, a.magic(message, fmt.Sprintf(format, args...)))
+		a.Output(time.Now().UTC(), EmergLevel, a.magic(message, fmt.Sprintf(format, args...)))
 	}
 }
 
