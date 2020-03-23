@@ -117,12 +117,20 @@ func (a *Logger) Level() uint32 {
 }
 
 // SetLevel set the logger's log level
-// The default logger level is DebugLevel
+// The default logger level is InfoLevel
 func (a *Logger) SetLevel(level uint32) *Logger {
 	ulevel := InfoLevel
 	if level >= 0 && level <= 7 {
 		ulevel = level
 	}
+	atomic.StoreUint32(&a.ulevel, ulevel)
+	return a
+}
+
+// SetLoggerLevel set the logger's log level
+// The default logger level is InfoLevel
+func (a *Logger) SetLoggerLevel(level string) *Logger {
+	ulevel := ParseLevel(level)
 	atomic.StoreUint32(&a.ulevel, ulevel)
 	return a
 }
@@ -395,4 +403,27 @@ func format2Log(i interface{}) log {
 	default:
 		return log{"message": fmt.Sprint(i)}
 	}
+}
+
+// ParseLevel takes a string level and returns the logging level constant.
+func ParseLevel(level string) uint32 {
+	switch strings.ToLower(level) {
+	case "emergency", "emerg":
+		return EmergLevel
+	case "alert":
+		return AlertLevel
+	case "critical", "crit", "criti":
+		return CritiLevel
+	case "error", "err":
+		return ErrLevel
+	case "warning", "warn":
+		return WarningLevel
+	case "notice":
+		return NoticeLevel
+	case "info":
+		return InfoLevel
+	case "debug":
+		return DebugLevel
+	}
+	return InfoLevel
 }
