@@ -372,6 +372,13 @@ func (a *Logger) Emergf(format string, args ...interface{}) {
 	}
 }
 
+// Panicf ...
+func (a *Logger) Panicf(format string, args ...interface{}) {
+	msg := fmt.Sprintf(format, args...)
+	a.Output(time.Now().UTC(), EmergLevel, a.magic(message, msg))
+	panic(msg)
+}
+
 // GetCaller ...
 func GetCaller(layer int) string {
 	_, file, line, ok := runtime.Caller(layer)

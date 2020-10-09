@@ -147,3 +147,8 @@ func Alertf(format string, args ...interface{}) {
 func Emergf(format string, args ...interface{}) {
 	defaultLogger.Emergf(format, args...)
 }
+
+// Panicf ...
+func Panicf(format string, args ...interface{}) {
+	defaultLogger.Panicf(format, args...)
+}
